@@ -334,3 +334,6 @@ dist
 .yarn/install-state.gz
 .pnp.*/
 MARKDOWN_CLEANING.md
+
+# Screenshots for debugging
+.screenshots/

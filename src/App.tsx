@@ -59,8 +59,12 @@ export default function App() {
       .replace(/\n\s*\n\s*\n+/g, '\n\n')
       // Fix numbered lists - remove line breaks between number and content
       .replace(/(\d+\.)\s*\n\s*([^\n])/g, '$1 $2')
-      // Fix bulleted lists - remove line breaks between bullet and content
-      .replace(/([*\-+])\s*\n\s*([^\n])/g, '$1 $2')
+      // Fix bulleted lists - remove line breaks between bullet and content, even with blank lines
+      .replace(/([*•\-+])\s*\n\s*([^\n])/g, '$1 $2')
+      // Join lines within a paragraph that are separated by a single newline
+      .replace(/([^\n])\n(?!\n|[*\-+]|\d+\.|\s*[#>`])/g, '$1 ')
+      // Attempt to fix list items separated by more than one newline
+      .replace(/\n\n([*•\-+])/g, '\n$1')
       // Fix sub-lists indentation issues
       .replace(/\n\s{2,}([*\-+\d])/g, '\n  $1')
       // Remove extra spaces before list items at start of lines
@@ -158,6 +162,7 @@ export default function App() {
           { role: "developer", content: devContent },
           { role: "user", content: [{ type: "input_text", text: userContent }] },
         ],
+        temperature: 0.5,
         tools: [tool],
         tool_choice: toolChoice as any,
         previous_response_id: previousResponseId || undefined,
@@ -296,14 +301,18 @@ export default function App() {
                 <span className="font-medium">Force web search</span>
               </label>
               
-              <select
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                className="px-3 py-2 input-cal-poly rounded-lg text-sm font-medium"
-              >
-                <option value="gpt-4o">gpt-4o</option>
-                <option value="gpt-4">gpt-4</option>
-              </select>
+              <div className="flex items-center gap-2">
+                <label className="font-medium text-cal-poly-gray">LLM model:</label>
+                <select
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  className="px-3 py-2 input-cal-poly rounded-lg text-sm font-medium"
+                >
+                  <option value="gpt-4o">gpt-4.1</option>
+                  <option value="gpt-4o">gpt-4.1-mini</option>
+                  <option value="gpt-4o">gpt-4o</option>
+                </select>
+              </div>
             </div>
             
             <div className="mt-3 flex items-center text-xs text-cal-poly-gray">
