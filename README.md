@@ -11,6 +11,8 @@ A client-only Single Page Application (SPA) that provides an AI-powered advisor 
 - **Smart Citations**: Provides inline citations and clickable sources
 - **Email Thread Support**: Detects email threads and generates advisor responses
 - **Configurable Search**: Choose between medium and high-depth web searches
+- **Streaming Responses**: Real-time response streaming for faster interaction
+- **Mobile-Friendly**: Responsive design optimized for all devices
 - **No Backend Required**: Runs entirely in the browser, perfect for GitHub Pages
 
 ## Usage
@@ -36,6 +38,8 @@ A client-only Single Page Application (SPA) that provides an AI-powered advisor 
 
 ## Development
 
+### Getting Started
+
 ```bash
 # Install dependencies
 npm install
@@ -45,7 +49,43 @@ npm run dev
 
 # Build for production
 npm run build
+
+# Run tests
+npm test
+
+# Run tests with UI
+npm run test:ui
+
+# Validate code (run tests + build)
+npm run validate
 ```
+
+### Development Guidelines
+
+**⚠️ IMPORTANT: All tests must pass before committing!**
+
+This project uses automated pre-commit hooks that will:
+1. ✅ Run all tests (`npm test`)
+2. 🔨 Build the project (`npm run build`)
+3. ❌ Block commits if either step fails
+
+#### Before Making Changes
+1. Always run `npm test` to ensure current tests pass
+2. Make your changes incrementally
+3. Run `npm run validate` frequently during development
+4. Add tests for new features when appropriate
+
+#### Pre-commit Hooks
+- **Husky** automatically runs tests and builds before each commit
+- If tests fail, the commit will be blocked
+- Fix any failing tests before attempting to commit again
+- Use `npm run validate` to manually check if your code is ready to commit
+
+#### Mobile-First Development
+- Test your changes on mobile viewports (320px+)
+- Use responsive design patterns with Tailwind CSS
+- Ensure touch targets are at least 44x44px
+- Test with browser developer tools mobile emulation
 
 ## Deployment
 

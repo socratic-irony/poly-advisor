@@ -1,0 +1,7 @@
+echo "🧪 Running tests..."
+npm test
+
+echo "🔨 Building project..."
+npm run build
+
+echo "✅ All pre-commit checks passed!"

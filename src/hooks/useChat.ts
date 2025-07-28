@@ -38,6 +38,7 @@ export function useChat(
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [previousResponseId, setPreviousResponseId] = useState<string | null>(null);
+  const [streamingMessageIndex, setStreamingMessageIndex] = useState<number | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,6 +73,12 @@ export function useChat(
       const userMessage: Message = { role: 'user', content: query };
       setMessages((prev) => [...prev, userMessage]);
       setInput('');
+
+      // Add placeholder assistant message for streaming simulation
+      const assistantMessageIndex = messages.length + 1;
+      setStreamingMessageIndex(assistantMessageIndex);
+      const placeholderMessage: Message = { role: 'assistant', content: '', sources: undefined };
+      setMessages((prev) => [...prev, placeholderMessage]);
 
       const client = createClient();
       const tool = { type: "web_search" as const } as any;
@@ -140,13 +147,32 @@ export function useChat(
           return acc;
         }, []);
 
-        const assistantMessage: Message = {
-          role: 'assistant',
-          content: cleanMarkdown(text),
-          sources: uniqueSources.length > 0 ? uniqueSources : undefined
-        };
-
-        setMessages(prev => [...prev, assistantMessage]);
+        // Simulate streaming by updating the message progressively
+        const cleanedText = cleanMarkdown(text);
+        const words = cleanedText.split(' ');
+        let currentContent = '';
+        
+        // Stream the text word by word for a better user experience
+        for (let i = 0; i < words.length; i++) {
+          currentContent += (i > 0 ? ' ' : '') + words[i];
+          
+          setMessages((prev) => 
+            prev.map((msg, idx) => 
+              idx === assistantMessageIndex
+                ? { 
+                    ...msg, 
+                    content: currentContent,
+                    sources: i === words.length - 1 && uniqueSources.length > 0 ? uniqueSources : undefined
+                  }
+                : msg
+            )
+          );
+          
+          // Add a small delay to simulate streaming
+          if (i < words.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 30));
+          }
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -154,19 +180,33 @@ export function useChat(
         role: 'assistant',
         content: `Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
       };
-      setMessages(prev => [...prev, errorMessage]);
+      
+      if (streamingMessageIndex !== null) {
+        setMessages((prev) => 
+          prev.map((msg, idx) => 
+            idx === streamingMessageIndex
+              ? errorMessage
+              : msg
+          )
+        );
+      } else {
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } finally {
       setIsLoading(false);
+      setStreamingMessageIndex(null);
     }
   };
 
   const newChat = () => {
     setPreviousResponseId(null);
+    setStreamingMessageIndex(null);
     const systemMessage: Message = { role: 'system', content: 'Started a new chat.' };
     setMessages([systemMessage]);
   };
 
   const clearScreen = () => {
+    setStreamingMessageIndex(null);
     setMessages([]);
   };
 

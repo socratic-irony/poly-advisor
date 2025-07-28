@@ -28,7 +28,7 @@ describe('ChatView', () => {
 
   it('shows loading indicator when loading', () => {
     render(<ChatView {...defaultProps} isLoading={true} />);
-    expect(screen.getByText('Poly Advisor is thinking...')).toBeInTheDocument();
+    expect(screen.getByText('Poly Advisor is searching & thinking...')).toBeInTheDocument();
   });
 
   it('shows empty state when there are no messages', () => {
