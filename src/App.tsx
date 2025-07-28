@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import OpenAI from 'openai';
 import ReactMarkdown from 'react-markdown';
+import { Settings, Copy, Check, RotateCw, ChevronDown, Download } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -21,6 +22,7 @@ export default function App() {
   const [forceSearch, setForceSearch] = useState<boolean>(true);
   const [previousResponseId, setPreviousResponseId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(true);
+  const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
   // Load API key from localStorage on mount
@@ -228,6 +230,18 @@ export default function App() {
     }
   };
 
+  const exportToMarkdown = (content: string) => {
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'poly-advisor-chat.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen cal-poly-gradient flex flex-col">
       <div className="max-w-5xl mx-auto w-full px-4 py-6 flex flex-col h-screen">
@@ -247,15 +261,10 @@ export default function App() {
               className="flex items-center justify-between w-full text-left"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-6 h-6 text-cal-poly-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+                <Settings className="w-6 h-6 text-cal-poly-primary" />
                 <h2 className="text-xl font-semibold text-cal-poly-primary">Settings</h2>
               </div>
-              <svg className={`w-6 h-6 text-cal-poly-gray transition-transform duration-300 ${isSettingsOpen ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <ChevronDown className={`w-6 h-6 text-cal-poly-gray transition-transform duration-300 ${isSettingsOpen ? 'transform rotate-180' : ''}`} />
             </button>
 
             {isSettingsOpen && (
@@ -416,11 +425,24 @@ export default function App() {
                   {message.role === 'assistant' && (
                     <div className="ml-11 mt-3 flex items-center gap-2">
                       <button 
-                        onClick={() => navigator.clipboard.writeText(message.content)}
+                        onClick={() => {
+                          navigator.clipboard.writeText(message.content);
+                          setCopiedMessageIndex(index);
+                          setTimeout(() => setCopiedMessageIndex(null), 2000);
+                        }}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-md transition-colors"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                        Copy
+                        {copiedMessageIndex === index ? (
+                          <>
+                            <Check className="w-4 h-4 text-green-600" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            Copy
+                          </>
+                        )}
                       </button>
                       <button 
                         onClick={() => {
@@ -432,8 +454,15 @@ export default function App() {
                         }}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-md transition-colors"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M4 4l5 5M20 20l-5-5" /></svg>
+                        <RotateCw className="w-4 h-4" />
                         Regenerate
+                      </button>
+                      <button
+                        onClick={() => exportToMarkdown(message.content)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-md transition-colors"
+                      >
+                        <Download className="w-4 h-4" />
+                        Export
                       </button>
                     </div>
                   )}
