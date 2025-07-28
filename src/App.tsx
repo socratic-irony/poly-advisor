@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import OpenAI from 'openai';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -17,7 +18,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [model, setModel] = useState<string>('gpt-4o');
   const [searchDepth, setSearchDepth] = useState<'medium' | 'high'>('medium');
-  const [forceSearch, setForceSearch] = useState<boolean>(false);
+  const [forceSearch, setForceSearch] = useState<boolean>(true);
   const [previousResponseId, setPreviousResponseId] = useState<string | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
@@ -92,7 +93,8 @@ export default function App() {
           "Give clear step-by-step instructions when forms/approvals are involved. " +
           "If the exact year is unclear, cite the most recent year you can find and label it; " +
           "if the specific year is not available, link the closest official source. " +
-          "Always include inline citations and a Sources list with titles and URLs. " +
+          "Always include inline citations and links with URLs. " +
+          "However, DO NOT include a list e.g. of `**Sources**` at the end -- these are included in the JSON response. " +
           "Use absolute dates (e.g., July 28, 2025). Ask a brief clarifying question if necessary."
         }
       ];
@@ -134,15 +136,23 @@ export default function App() {
         const text = textObj?.text || '';
         const annotations = textObj?.annotations?.filter((a: any) => a.type === 'url_citation') || [];
 
-        const sources = annotations.map((a: any) => ({
-          title: a.title || a.url,
-          url: a.url
-        }));
+        // Deduplicate sources by URL
+        const uniqueSources = annotations.reduce((acc: any[], annotation: any) => {
+          const url = annotation.url;
+          const existingSource = acc.find(source => source.url === url);
+          if (!existingSource) {
+            acc.push({
+              title: annotation.title || annotation.url,
+              url: annotation.url
+            });
+          }
+          return acc;
+        }, []);
 
         const assistantMessage: Message = {
           role: 'assistant',
           content: text,
-          sources: sources.length > 0 ? sources : undefined
+          sources: uniqueSources.length > 0 ? uniqueSources : undefined
         };
 
         setMessages(prev => [...prev, assistantMessage]);
@@ -315,7 +325,27 @@ export default function App() {
                     </span>
                   </div>
                   <div className="ml-11 whitespace-pre-wrap text-cal-poly-gray-dark leading-relaxed">
-                    {message.content}
+                    <ReactMarkdown
+                      components={{
+                        a: ({ node, ...props }) => (
+                          <a {...props} target="_blank" rel="noopener noreferrer" className="text-cal-poly-primary hover:text-cal-poly-green-light underline" />
+                        ),
+                        p: ({ node, ...props }) => <p {...props} className="mb-3 last:mb-0" />,
+                        ul: ({ node, ...props }) => <ul {...props} className="list-disc ml-6 mb-3" />,
+                        ol: ({ node, ...props }) => <ol {...props} className="list-decimal ml-6 mb-3" />,
+                        li: ({ node, ...props }) => <li {...props} className="mb-1" />,
+                        h1: ({ node, ...props }) => <h1 {...props} className="text-2xl font-bold text-cal-poly-primary mb-4" />,
+                        h2: ({ node, ...props }) => <h2 {...props} className="text-xl font-semibold text-cal-poly-primary mb-3" />,
+                        h3: ({ node, ...props }) => <h3 {...props} className="text-lg font-semibold text-cal-poly-primary mb-2" />,
+                        strong: ({ node, ...props }) => <strong {...props} className="font-semibold text-cal-poly-gray-dark" />,
+                        em: ({ node, ...props }) => <em {...props} className="italic" />,
+                        code: ({ node, ...props }) => <code {...props} className="bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm font-mono" />,
+                        pre: ({ node, ...props }) => <pre {...props} className="bg-gray-100 text-gray-800 p-3 rounded-lg text-sm font-mono overflow-x-auto mb-3" />,
+                        blockquote: ({ node, ...props }) => <blockquote {...props} className="border-l-4 border-cal-poly-primary pl-4 py-2 bg-gray-50 mb-3 italic" />
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
                   </div>
                   {message.sources && message.sources.length > 0 && (
                     <div className="ml-11 mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
