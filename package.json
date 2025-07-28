@@ -7,7 +7,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "validate": "npm test && npm run build",
+    "prepare": "husky"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -26,6 +28,7 @@
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.19",
+    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.4",
