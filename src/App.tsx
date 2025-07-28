@@ -52,6 +52,41 @@ export default function App() {
     return /^(from|subject|date|to):/im.test(text) || /On .* wrote:/i.test(text);
   };
 
+  const cleanMarkdown = (text: string): string => {
+    // Remove excessive whitespace and normalize line breaks
+    return text
+      // Remove multiple consecutive blank lines (more than 2)
+      .replace(/\n\s*\n\s*\n+/g, '\n\n')
+      // Fix numbered lists - remove line breaks between number and content
+      .replace(/(\d+\.)\s*\n\s*([^\n])/g, '$1 $2')
+      // Fix bulleted lists - remove line breaks between bullet and content
+      .replace(/([*\-+])\s*\n\s*([^\n])/g, '$1 $2')
+      // Fix sub-lists indentation issues
+      .replace(/\n\s{2,}([*\-+\d])/g, '\n  $1')
+      // Remove extra spaces before list items at start of lines
+      .replace(/\n\s+([*\-+]|\d+\.)/g, '\n$1')
+      // Clean up multiple spaces within lines
+      .replace(/[ \t]{2,}/g, ' ')
+      // Normalize line endings
+      .replace(/\r\n/g, '\n')
+      // Remove trailing whitespace from each line
+      .replace(/[ \t]+$/gm, '')
+      // Ensure proper spacing after headers
+      .replace(/^(#{1,6})\s*(.+)\s*$/gm, '$1 $2')
+      // Ensure proper spacing around code blocks
+      .replace(/```\s*\n/g, '```\n')
+      .replace(/\n\s*```/g, '\n```')
+      // Clean up blockquotes
+      .replace(/>\s+/g, '> ')
+      // Fix spacing around inline code
+      .replace(/`\s+/g, '`')
+      .replace(/\s+`/g, '`')
+      // Ensure paragraphs have proper spacing
+      .replace(/(\n[^\n#*\-+>\d`\s])/g, '\n$1')
+      // Remove leading/trailing whitespace
+      .trim();
+  };
+
   const getSystemDepthText = (): string => {
     return searchDepth === 'high'
       ? "Use a high-depth web search within *.calpoly.edu (cast a wider net, review more authoritative pages)."
@@ -82,8 +117,8 @@ export default function App() {
       setInput('');
 
       const client = createClient();
-      const tool = { type: "web_search" as const };
-      const toolChoice = forceSearch ? { type: "web_search" as const } : "auto" as const;
+      const tool = { type: "web_search" as const } as any;
+      const toolChoice = forceSearch ? { type: "web_search" as const } as any : "auto" as const;
 
       const systemContent = [
         { type: "input_text" as const, text:
@@ -124,7 +159,7 @@ export default function App() {
           { role: "user", content: [{ type: "input_text", text: userContent }] },
         ],
         tools: [tool],
-        tool_choice: toolChoice,
+        tool_choice: toolChoice as any,
         previous_response_id: previousResponseId || undefined,
       });
 
@@ -132,7 +167,7 @@ export default function App() {
 
       const messageItem = (response.output || []).find((o: any) => o.type === "message");
       if (messageItem) {
-        const textObj = messageItem.content.find((c: any) => c.type === 'output_text');
+        const textObj = (messageItem as any).content?.find((c: any) => c.type === 'output_text');
         const text = textObj?.text || '';
         const annotations = textObj?.annotations?.filter((a: any) => a.type === 'url_citation') || [];
 
@@ -151,7 +186,7 @@ export default function App() {
 
         const assistantMessage: Message = {
           role: 'assistant',
-          content: text,
+          content: cleanMarkdown(text),
           sources: uniqueSources.length > 0 ? uniqueSources : undefined
         };
 
@@ -331,12 +366,12 @@ export default function App() {
                           <a {...props} target="_blank" rel="noopener noreferrer" className="text-cal-poly-primary hover:text-cal-poly-green-light underline" />
                         ),
                         p: ({ node, ...props }) => <p {...props} className="mb-3 last:mb-0" />,
-                        ul: ({ node, ...props }) => <ul {...props} className="list-disc ml-6 mb-3" />,
-                        ol: ({ node, ...props }) => <ol {...props} className="list-decimal ml-6 mb-3" />,
-                        li: ({ node, ...props }) => <li {...props} className="mb-1" />,
-                        h1: ({ node, ...props }) => <h1 {...props} className="text-2xl font-bold text-cal-poly-primary mb-4" />,
-                        h2: ({ node, ...props }) => <h2 {...props} className="text-xl font-semibold text-cal-poly-primary mb-3" />,
-                        h3: ({ node, ...props }) => <h3 {...props} className="text-lg font-semibold text-cal-poly-primary mb-2" />,
+                        ul: ({ node, ...props }) => <ul {...props} className="list-disc ml-6 mb-3 space-y-1" />,
+                        ol: ({ node, ...props }) => <ol {...props} className="list-decimal ml-6 mb-3 space-y-1" />,
+                        li: ({ node, ...props }) => <li {...props} className="leading-relaxed" />,
+                        h1: ({ node, ...props }) => <h1 {...props} className="text-2xl font-bold text-cal-poly-primary mb-4 mt-6 first:mt-0" />,
+                        h2: ({ node, ...props }) => <h2 {...props} className="text-xl font-semibold text-cal-poly-primary mb-3 mt-5 first:mt-0" />,
+                        h3: ({ node, ...props }) => <h3 {...props} className="text-lg font-semibold text-cal-poly-primary mb-2 mt-4 first:mt-0" />,
                         strong: ({ node, ...props }) => <strong {...props} className="font-semibold text-cal-poly-gray-dark" />,
                         em: ({ node, ...props }) => <em {...props} className="italic" />,
                         code: ({ node, ...props }) => <code {...props} className="bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm font-mono" />,
