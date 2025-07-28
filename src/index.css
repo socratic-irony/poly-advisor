@@ -1,0 +1,106 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Cal Poly Color Theme */
+:root {
+  --cal-poly-green: #14532d;
+  --cal-poly-green-light: #16a34a;
+  --cal-poly-green-dark: #0f172a;
+  --cal-poly-gold: #f59e0b;
+  --cal-poly-gold-light: #fbbf24;
+  --cal-poly-gold-dark: #d97706;
+  --cal-poly-cream: #fefdf8;
+  --cal-poly-gray: #6b7280;
+  --cal-poly-gray-light: #f3f4f6;
+  --cal-poly-gray-dark: #374151;
+}
+
+/* Custom gradient backgrounds */
+.cal-poly-gradient {
+  background: linear-gradient(135deg, var(--cal-poly-cream) 0%, #f9fafb 100%);
+}
+
+.cal-poly-header-gradient {
+  background: linear-gradient(135deg, var(--cal-poly-green) 0%, var(--cal-poly-green-light) 100%);
+}
+
+.cal-poly-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced shadows */
+.cal-poly-shadow {
+  box-shadow: 0 10px 25px -5px rgba(20, 83, 45, 0.1), 0 10px 10px -5px rgba(20, 83, 45, 0.04);
+}
+
+.cal-poly-shadow-lg {
+  box-shadow: 0 20px 25px -5px rgba(20, 83, 45, 0.15), 0 10px 10px -5px rgba(20, 83, 45, 0.08);
+}
+
+/* Animation for loading states */
+@keyframes pulse-cal-poly {
+  0%, 100% {
+    opacity: 1;
+    color: var(--cal-poly-green);
+  }
+  50% {
+    opacity: 0.7;
+    color: var(--cal-poly-green-light);
+  }
+}
+
+.animate-pulse-cal-poly {
+  animation: pulse-cal-poly 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom button styles */
+.btn-cal-poly-primary {
+  background: linear-gradient(135deg, var(--cal-poly-green) 0%, var(--cal-poly-green-light) 100%);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-cal-poly-primary:hover {
+  background: linear-gradient(135deg, var(--cal-poly-green-dark) 0%, var(--cal-poly-green) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(20, 83, 45, 0.3);
+}
+
+.btn-cal-poly-secondary {
+  background: linear-gradient(135deg, var(--cal-poly-gold) 0%, var(--cal-poly-gold-light) 100%);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-cal-poly-secondary:hover {
+  background: linear-gradient(135deg, var(--cal-poly-gold-dark) 0%, var(--cal-poly-gold) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Enhanced input styles */
+.input-cal-poly {
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.input-cal-poly:focus {
+  border-color: var(--cal-poly-green-light);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  background: white;
+}
+
+/* Typography enhancements */
+.text-cal-poly-primary {
+  color: var(--cal-poly-green);
+}
+
+.text-cal-poly-gold {
+  color: var(--cal-poly-gold);
+}
