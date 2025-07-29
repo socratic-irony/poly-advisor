@@ -23,6 +23,7 @@ export default function App() {
     messages,
     input,
     isLoading,
+    streamingMessageIndex,
     chatRef,
     setInput,
     ask,
@@ -86,6 +87,7 @@ export default function App() {
         <ChatView
           messages={messages}
           isLoading={isLoading}
+          streamingMessageIndex={streamingMessageIndex}
           chatRef={chatRef}
           copiedMessageIndex={copiedMessageIndex}
           onCopy={handleCopy}

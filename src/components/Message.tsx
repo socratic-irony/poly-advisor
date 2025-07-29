@@ -5,13 +5,14 @@ import { Message as MessageType } from '../types';
 interface MessageProps {
   message: MessageType;
   index: number;
+  isStreaming: boolean;
   copiedMessageIndex: number | null;
   onCopy: (index: number, content: string) => void;
   onRegenerate: () => void;
   onExport: (content: string) => void;
 }
 
-export default function Message({ message, index, copiedMessageIndex, onCopy, onRegenerate, onExport }: MessageProps) {
+export default function Message({ message, index, isStreaming, copiedMessageIndex, onCopy, onRegenerate, onExport }: MessageProps) {
   return (
     <div className="group">
       <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
@@ -52,7 +53,7 @@ export default function Message({ message, index, copiedMessageIndex, onCopy, on
         </ReactMarkdown>
       </div>
 
-      {message.role === 'assistant' && (
+      {message.role === 'assistant' && !isStreaming && (
         <div className="ml-8 sm:ml-11 mt-2 sm:mt-3 flex flex-wrap items-center gap-1 sm:gap-2">
           <button 
             onClick={() => onCopy(index, message.content)}

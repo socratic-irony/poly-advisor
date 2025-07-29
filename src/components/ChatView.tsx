@@ -4,6 +4,7 @@ import Message from './Message';
 interface ChatViewProps {
   messages: MessageType[];
   isLoading: boolean;
+  streamingMessageIndex: number | null;
   chatRef: React.RefObject<HTMLDivElement>;
   copiedMessageIndex: number | null;
   onCopy: (index: number, content: string) => void;
@@ -11,7 +12,7 @@ interface ChatViewProps {
   onExport: (content: string) => void;
 }
 
-export default function ChatView({ messages, isLoading, chatRef, copiedMessageIndex, onCopy, onRegenerate, onExport }: ChatViewProps) {
+export default function ChatView({ messages, isLoading, streamingMessageIndex, chatRef, copiedMessageIndex, onCopy, onRegenerate, onExport }: ChatViewProps) {
   return (
     <div
       ref={chatRef}
@@ -45,6 +46,7 @@ export default function ChatView({ messages, isLoading, chatRef, copiedMessageIn
               key={index}
               message={message}
               index={index}
+              isStreaming={streamingMessageIndex === index}
               copiedMessageIndex={copiedMessageIndex}
               onCopy={onCopy}
               onRegenerate={onRegenerate}

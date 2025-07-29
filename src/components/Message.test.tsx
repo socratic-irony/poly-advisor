@@ -13,6 +13,7 @@ describe('Message', () => {
   const defaultProps = {
     message,
     index: 0,
+    isStreaming: false,
     copiedMessageIndex: null,
     onCopy: vi.fn(),
     onRegenerate: vi.fn(),
@@ -59,5 +60,19 @@ describe('Message', () => {
     const exportButton = screen.getByText('Export');
     fireEvent.click(exportButton);
     expect(defaultProps.onExport).toHaveBeenCalledWith('This is a test message.');
+  });
+
+  it('hides action buttons when message is streaming', () => {
+    render(<Message {...defaultProps} isStreaming={true} />);
+    expect(screen.queryByText('Copy')).not.toBeInTheDocument();
+    expect(screen.queryByText('Regenerate')).not.toBeInTheDocument();
+    expect(screen.queryByText('Export')).not.toBeInTheDocument();
+  });
+
+  it('shows action buttons when message is not streaming', () => {
+    render(<Message {...defaultProps} isStreaming={false} />);
+    expect(screen.getByText('Copy')).toBeInTheDocument();
+    expect(screen.getByText('Regenerate')).toBeInTheDocument();
+    expect(screen.getByText('Export')).toBeInTheDocument();
   });
 });
