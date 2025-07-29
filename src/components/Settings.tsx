@@ -1,6 +1,3 @@
-import { useState } from 'react';
-import { Settings, ChevronDown } from 'lucide-react';
-
 interface SettingsProps {
   apiKey: string;
   onApiKeyChange: (value: string) => void;
@@ -20,23 +17,8 @@ export default function SettingsComponent({
   forceSearch, onForceSearchChange,
   model, onModelChange
 }: SettingsProps) {
-  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(true);
-
   return (
-    <div className="cal-poly-card p-3 sm:p-4 lg:p-6 rounded-xl cal-poly-shadow-lg mb-3 sm:mb-4">
-      <button
-        onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-        className="flex items-center justify-between w-full text-left"
-      >
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-cal-poly-primary" />
-          <h2 className="text-lg sm:text-xl font-semibold text-cal-poly-primary">Settings</h2>
-        </div>
-        <ChevronDown className={`w-5 h-5 sm:w-6 sm:h-6 text-cal-poly-gray transition-transform duration-300 ${isSettingsOpen ? 'transform rotate-180' : ''}`} />
-      </button>
-
-      {isSettingsOpen && (
-        <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
+    <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
             <input
               type="password"
@@ -120,8 +102,6 @@ export default function SettingsComponent({
             </svg>
             Your key stays secure in this browser. Never commit it to code.
           </div>
-        </div>
-      )}
     </div>
   );
 }

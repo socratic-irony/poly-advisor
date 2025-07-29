@@ -16,9 +16,11 @@ describe('SettingsComponent', () => {
     onModelChange: vi.fn(),
   };
 
-  it('renders the settings section', () => {
+  it('renders the settings form', () => {
     render(<Settings {...defaultProps} />);
-    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByLabelText('OpenAI API key')).toBeInTheDocument();
+    expect(screen.getByText('Save')).toBeInTheDocument();
+    expect(screen.getByText('Forget')).toBeInTheDocument();
   });
 
   it('calls onApiKeyChange when the api key input changes', () => {
