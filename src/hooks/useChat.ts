@@ -222,6 +222,7 @@ export function useChat(
     messages,
     input,
     isLoading,
+    streamingMessageIndex,
     chatRef,
     setInput,
     ask,

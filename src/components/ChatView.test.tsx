@@ -12,6 +12,7 @@ describe('ChatView', () => {
   const defaultProps = {
     messages,
     isLoading: false,
+    streamingMessageIndex: null,
     chatRef: { current: null },
     copiedMessageIndex: null,
     onCopy: vi.fn(),
