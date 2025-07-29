@@ -29,23 +29,22 @@ export default function ChatView({
   onFileComment 
 }: ChatViewProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [draggedFiles, setDraggedFiles] = useState<File[]>([]);
 
   const isValidEmlFile = (file: File) => {
     return file.name.toLowerCase().endsWith('.eml') || file.type === 'message/rfc822';
-  };
-
-  const hasValidEmlFiles = (files: FileList | File[]) => {
-    return Array.from(files).some(isValidEmlFile);
   };
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (e.dataTransfer?.files && hasValidEmlFiles(e.dataTransfer.files)) {
+    // Check if files are being dragged (works better with external apps)
+    const hasFiles = e.dataTransfer?.types?.includes('Files') || 
+                    e.dataTransfer?.types?.includes('application/x-moz-file') ||
+                    e.dataTransfer?.files?.length > 0;
+    
+    if (hasFiles) {
       setIsDragging(true);
-      setDraggedFiles(Array.from(e.dataTransfer.files).filter(isValidEmlFile));
     }
   };
 
@@ -53,10 +52,15 @@ export default function ChatView({
     e.preventDefault();
     e.stopPropagation();
     
-    // Only hide dropzone if we're leaving the main container
-    if (e.currentTarget === e.target) {
+    // Only hide dropzone if we're actually leaving the container
+    // Use relatedTarget to check if we're moving to a child element
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    // If mouse is outside the container bounds, hide the dropzone
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       setIsDragging(false);
-      setDraggedFiles([]);
     }
   };
 
@@ -69,7 +73,6 @@ export default function ChatView({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    setDraggedFiles([]);
   };
 
   const handleInstantReplyDrop = (e: React.DragEvent) => {
@@ -81,10 +84,12 @@ export default function ChatView({
     
     if (emlFile) {
       onFileInstantReply(emlFile);
+    } else if (files.length > 0) {
+      // Show user feedback if they dropped non-eml files
+      console.warn('Only .eml email files are supported. Please drop a .eml file.');
     }
     
     setIsDragging(false);
-    setDraggedFiles([]);
   };
 
   const handleCommentDrop = (e: React.DragEvent) => {
@@ -96,10 +101,12 @@ export default function ChatView({
     
     if (emlFile) {
       onFileComment(emlFile);
+    } else if (files.length > 0) {
+      // Show user feedback if they dropped non-eml files
+      console.warn('Only .eml email files are supported. Please drop a .eml file.');
     }
     
     setIsDragging(false);
-    setDraggedFiles([]);
   };
 
   return (
@@ -126,18 +133,11 @@ export default function ChatView({
               Instant Reply
             </h3>
             <p className="text-green-700 text-center text-sm">
-              Drop an email to get a draft reply
+              Drop an email file (.eml) to get a draft reply
             </p>
-            {draggedFiles.length > 0 && (
-              <div className="mt-3 text-xs text-green-600">
-                {draggedFiles.map(file => (
-                  <div key={file.name} className="flex items-center gap-1">
-                    <FileText className="w-3 h-3" />
-                    {file.name}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="mt-3 text-xs text-green-600 text-center">
+              Supports .eml files and message/rfc822 format
+            </div>
           </div>
 
           {/* Right Dropzone - Comment Mode */}
@@ -151,18 +151,11 @@ export default function ChatView({
               Drop and Comment
             </h3>
             <p className="text-blue-700 text-center text-sm">
-              Add context to an attachment before sending
+              Drop an email file (.eml) to add context before sending
             </p>
-            {draggedFiles.length > 0 && (
-              <div className="mt-3 text-xs text-blue-600">
-                {draggedFiles.map(file => (
-                  <div key={file.name} className="flex items-center gap-1">
-                    <FileText className="w-3 h-3" />
-                    {file.name}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="mt-3 text-xs text-blue-600 text-center">
+              Supports .eml files and message/rfc822 format
+            </div>
           </div>
         </div>
       )}
