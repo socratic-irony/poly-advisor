@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import OpenAI from 'openai';
 import { Message } from '../types';
 import { parseEmlFile, readFileAsText } from '../utils/emlParser';
+import { stripHtml } from '../utils/stripHtml';
 
 // Helper functions
 const isEmailThread = (text: string): boolean => {
@@ -223,7 +224,7 @@ export function useChat(
     try {
       setIsLoading(true);
       const fileContent = await readFileAsText(file);
-      const parsedContent = parseEmlFile(fileContent);
+      const parsedContent = stripHtml(parseEmlFile(fileContent));
       
       const userMessage: Message = { 
         role: 'user', 
@@ -252,7 +253,7 @@ export function useChat(
   const processFileForComment = async (file: File) => {
     try {
       const fileContent = await readFileAsText(file);
-      const parsedContent = parseEmlFile(fileContent);
+      const parsedContent = stripHtml(parseEmlFile(fileContent));
       
       // Set the input with the parsed content so user can add comments
       setInput(`[Email attached: ${file.name}]\n\n${parsedContent}\n\n--- Add your comments below ---\n`);
