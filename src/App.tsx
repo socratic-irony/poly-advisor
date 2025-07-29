@@ -31,8 +31,6 @@ export default function App() {
     ask,
     clearScreen,
     handleRegenerate,
-    processFileForInstantReply,
-    processFileForComment,
   } = useChat(model, searchDepth, forceSearch);
 
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
@@ -101,8 +99,6 @@ export default function App() {
             onCopy={handleCopy}
             onRegenerate={handleRegenerate}
             onExport={exportToMarkdown}
-            onFileInstantReply={processFileForInstantReply}
-            onFileComment={processFileForComment}
           />
         </div>
 

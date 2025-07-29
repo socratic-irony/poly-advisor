@@ -1,5 +1,5 @@
 import ReactMarkdown from 'react-markdown';
-import { Copy, Check, RotateCw, Download, Mail } from 'lucide-react';
+import { Copy, Check, RotateCw, Download } from 'lucide-react';
 import { Message as MessageType } from '../types';
 
 interface MessageProps {
@@ -30,24 +30,6 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
         </span>
       </div>
       <div className="ml-8 sm:ml-11 whitespace-pre-wrap text-cal-poly-gray-dark leading-relaxed text-sm sm:text-base">
-        {/* File Attachment Indicator */}
-        {message.attachment && (
-          <div className="mb-3 p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center gap-2">
-            <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="text-blue-800 font-medium text-xs sm:text-sm">
-                Email Attachment
-              </div>
-              <div className="text-blue-600 text-xs truncate">
-                {message.attachment.fileName}
-              </div>
-            </div>
-            <div className="text-blue-500 text-xs uppercase font-semibold">
-              {message.attachment.type}
-            </div>
-          </div>
-        )}
-        
         <ReactMarkdown
           components={{
             a: ({ node, ...props }) => (

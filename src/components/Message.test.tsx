@@ -75,25 +75,4 @@ describe('Message', () => {
     expect(screen.getByText('Regenerate')).toBeInTheDocument();
     expect(screen.getByText('Export')).toBeInTheDocument();
   });
-
-  it('displays file attachment when present', () => {
-    const messageWithAttachment: MessageType = {
-      role: 'user',
-      content: 'Email content here',
-      attachment: {
-        fileName: 'test-email.eml',
-        type: 'eml'
-      }
-    };
-
-    render(<Message {...defaultProps} message={messageWithAttachment} />);
-    expect(screen.getByText('Email Attachment')).toBeInTheDocument();
-    expect(screen.getByText('test-email.eml')).toBeInTheDocument();
-    expect(screen.getByText('eml')).toBeInTheDocument();
-  });
-
-  it('does not display attachment section when no attachment', () => {
-    render(<Message {...defaultProps} />);
-    expect(screen.queryByText('Email Attachment')).not.toBeInTheDocument();
-  });
 });

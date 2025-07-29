@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import { Message as MessageType } from '../types';
-import { Mail, FileText } from 'lucide-react';
 import Message from './Message';
 
 interface ChatViewProps {
@@ -12,162 +10,15 @@ interface ChatViewProps {
   onCopy: (index: number, content: string) => void;
   onRegenerate: () => void;
   onExport: (content: string) => void;
-  onFileInstantReply: (file: File) => void;
-  onFileComment: (file: File) => void;
 }
 
-export default function ChatView({ 
-  messages, 
-  isLoading, 
-  streamingMessageIndex, 
-  chatRef, 
-  copiedMessageIndex, 
-  onCopy, 
-  onRegenerate, 
-  onExport,
-  onFileInstantReply,
-  onFileComment 
-}: ChatViewProps) {
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedFiles, setDraggedFiles] = useState<File[]>([]);
-
-  const isValidEmlFile = (file: File) => {
-    return file.name.toLowerCase().endsWith('.eml') || file.type === 'message/rfc822';
-  };
-
-  const hasValidEmlFiles = (files: FileList | File[]) => {
-    return Array.from(files).some(isValidEmlFile);
-  };
-
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (e.dataTransfer?.files && hasValidEmlFiles(e.dataTransfer.files)) {
-      setIsDragging(true);
-      setDraggedFiles(Array.from(e.dataTransfer.files).filter(isValidEmlFile));
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Only hide dropzone if we're leaving the main container
-    if (e.currentTarget === e.target) {
-      setIsDragging(false);
-      setDraggedFiles([]);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    setDraggedFiles([]);
-  };
-
-  const handleInstantReplyDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const files = Array.from(e.dataTransfer?.files || []);
-    const emlFile = files.find(isValidEmlFile);
-    
-    if (emlFile) {
-      onFileInstantReply(emlFile);
-    }
-    
-    setIsDragging(false);
-    setDraggedFiles([]);
-  };
-
-  const handleCommentDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const files = Array.from(e.dataTransfer?.files || []);
-    const emlFile = files.find(isValidEmlFile);
-    
-    if (emlFile) {
-      onFileComment(emlFile);
-    }
-    
-    setIsDragging(false);
-    setDraggedFiles([]);
-  };
-
+export default function ChatView({ messages, isLoading, streamingMessageIndex, chatRef, copiedMessageIndex, onCopy, onRegenerate, onExport }: ChatViewProps) {
   return (
     <div
       ref={chatRef}
-      className="relative flex-1 cal-poly-card rounded-xl cal-poly-shadow-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-6 overflow-y-auto"
+      className="flex-1 cal-poly-card rounded-xl cal-poly-shadow-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-6 overflow-y-auto"
       aria-live="polite"
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
     >
-      {/* Dropzone Overlay */}
-      {isDragging && (
-        <div className="absolute inset-0 z-50 flex bg-white/90 backdrop-blur-sm rounded-xl">
-          {/* Left Dropzone - Instant Reply */}
-          <div
-            className="flex-1 p-4 m-2 border-2 border-dashed border-green-400 bg-green-50/80 rounded-lg flex flex-col items-center justify-center hover:bg-green-100/80 transition-colors"
-            onDrop={handleInstantReplyDrop}
-            onDragOver={handleDragOver}
-          >
-            <Mail className="w-12 h-12 text-green-600 mb-4" />
-            <h3 className="text-lg font-semibold text-green-800 mb-2 text-center">
-              Instant Reply
-            </h3>
-            <p className="text-green-700 text-center text-sm">
-              Drop an email to get a draft reply
-            </p>
-            {draggedFiles.length > 0 && (
-              <div className="mt-3 text-xs text-green-600">
-                {draggedFiles.map(file => (
-                  <div key={file.name} className="flex items-center gap-1">
-                    <FileText className="w-3 h-3" />
-                    {file.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Right Dropzone - Comment Mode */}
-          <div
-            className="flex-1 p-4 m-2 border-2 border-dashed border-blue-400 bg-blue-50/80 rounded-lg flex flex-col items-center justify-center hover:bg-blue-100/80 transition-colors"
-            onDrop={handleCommentDrop}
-            onDragOver={handleDragOver}
-          >
-            <FileText className="w-12 h-12 text-blue-600 mb-4" />
-            <h3 className="text-lg font-semibold text-blue-800 mb-2 text-center">
-              Drop and Comment
-            </h3>
-            <p className="text-blue-700 text-center text-sm">
-              Add context to an attachment before sending
-            </p>
-            {draggedFiles.length > 0 && (
-              <div className="mt-3 text-xs text-blue-600">
-                {draggedFiles.map(file => (
-                  <div key={file.name} className="flex items-center gap-1">
-                    <FileText className="w-3 h-3" />
-                    {file.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Regular Chat Content */}
       {messages.length === 0 ? (
         <div className="h-full flex items-center justify-center">
           <div className="text-center max-w-md px-4">
@@ -184,9 +35,6 @@ export default function ChatView({
               </div>
               <div className="bg-amber-50 text-amber-700 px-3 sm:px-4 py-2 rounded-lg border border-amber-200">
                 <strong>Or:</strong> "How do I change my major to Philosophy?"
-              </div>
-              <div className="bg-blue-50 text-blue-700 px-3 sm:px-4 py-2 rounded-lg border border-blue-200">
-                <strong>New:</strong> Drag .eml email files here for instant replies!
               </div>
             </div>
           </div>
