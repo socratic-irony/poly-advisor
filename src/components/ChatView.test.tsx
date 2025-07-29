@@ -18,6 +18,8 @@ describe('ChatView', () => {
     onCopy: vi.fn(),
     onRegenerate: vi.fn(),
     onExport: vi.fn(),
+    onFileInstantReply: vi.fn(),
+    onFileComment: vi.fn(),
   };
 
   it('renders messages', () => {
