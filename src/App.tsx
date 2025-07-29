@@ -25,10 +25,10 @@ export default function App() {
     messages,
     input,
     isLoading,
+    streamingMessageIndex,
     chatRef,
     setInput,
     ask,
-    newChat,
     clearScreen,
     handleRegenerate,
   } = useChat(model, searchDepth, forceSearch);
@@ -63,52 +63,53 @@ export default function App() {
 
   return (
     <div className="min-h-screen cal-poly-gradient flex flex-col">
-      {/* Mobile menu bar */}
-      <TopMenuBar onSettingsClick={() => setIsSettingsModalOpen(true)} />
-      
-      <div className="max-w-5xl mx-auto w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col h-screen">
-        {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <div className="text-center mb-4 sm:mb-6">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-cal-poly-primary mb-2 tracking-tight">
-              🎓 Poly Advisor
-            </h1>
-            <p className="text-base sm:text-lg text-cal-poly-gray">Your AI-powered Cal Poly assistant</p>
-          </div>
-        </div>
+  {/* Mobile menu bar */}
+  <TopMenuBar onSettingsClick={() => setIsSettingsModalOpen(true)} />
 
-        {/* Desktop settings button - positioned in upper right of chat area */}
-        <div className="relative">
-          <button
-            onClick={() => setIsSettingsModalOpen(true)}
-            className="hidden md:flex absolute top-4 right-4 z-10 items-center gap-2 px-3 py-2 text-cal-poly-gray hover:text-cal-poly-primary hover:bg-white/50 rounded-lg transition-colors"
-            aria-label="Open settings"
-          >
-            <Settings className="w-5 h-5" />
-            <span className="text-sm font-medium">Settings</span>
-          </button>
-
-          <ChatView
-            messages={messages}
-            isLoading={isLoading}
-            chatRef={chatRef}
-            copiedMessageIndex={copiedMessageIndex}
-            onCopy={handleCopy}
-            onRegenerate={handleRegenerate}
-            onExport={exportToMarkdown}
-          />
-        </div>
-
-        <InputForm
-          input={input}
-          isLoading={isLoading}
-          onInputChange={setInput}
-          onAsk={ask}
-          onNewChat={newChat}
-          onClearScreen={clearScreen}
-          onKeyDown={handleKeyDown}
-        />
+  <div className="max-w-5xl mx-auto w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col h-screen">
+    {/* Header */}
+    <div className="mb-4 sm:mb-6">
+      <div className="text-center mb-4 sm:mb-6">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-cal-poly-primary mb-2 tracking-tight">
+          🎓 Poly Advisor
+        </h1>
+        <p className="text-base sm:text-lg text-cal-poly-gray">Your AI-powered Cal Poly assistant</p>
       </div>
+    </div>
+
+    {/* Desktop settings button - positioned in upper right of chat area */}
+    <div className="relative">
+      <button
+        onClick={() => setIsSettingsModalOpen(true)}
+        className="hidden md:flex absolute top-4 right-4 z-10 items-center gap-2 px-3 py-2 text-cal-poly-gray hover:text-cal-poly-primary hover:bg-white/50 rounded-lg transition-colors"
+        aria-label="Open settings"
+      >
+        <Settings className="w-5 h-5" />
+        <span className="text-sm font-medium">Settings</span>
+      </button>
+
+      <ChatView
+        messages={messages}
+        isLoading={isLoading}
+        streamingMessageIndex={streamingMessageIndex}
+        chatRef={chatRef}
+        copiedMessageIndex={copiedMessageIndex}
+        onCopy={handleCopy}
+        onRegenerate={handleRegenerate}
+        onExport={exportToMarkdown}
+      />
+    </div>
+
+    <InputForm
+      input={input}
+      isLoading={isLoading}
+      onInputChange={setInput}
+      onAsk={ask}
+      onClearScreen={clearScreen}
+      onKeyDown={handleKeyDown}
+    />
+  </div>
+</div>
 
       {/* Settings Modal */}
       <SettingsModal

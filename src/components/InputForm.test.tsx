@@ -8,7 +8,6 @@ describe('InputForm', () => {
     isLoading: false,
     onInputChange: vi.fn(),
     onAsk: vi.fn(),
-    onNewChat: vi.fn(),
     onClearScreen: vi.fn(),
     onKeyDown: vi.fn(),
   };
@@ -42,13 +41,6 @@ describe('InputForm', () => {
     const askButton = screen.getByText('Ask Poly Advisor');
     fireEvent.click(askButton);
     expect(defaultProps.onAsk).toHaveBeenCalled();
-  });
-
-  it('calls onNewChat when new chat button is clicked', () => {
-    render(<InputForm {...defaultProps} />);
-    const newChatButton = screen.getByText('New Chat');
-    fireEvent.click(newChatButton);
-    expect(defaultProps.onNewChat).toHaveBeenCalled();
   });
 
   it('calls onClearScreen when clear screen button is clicked', () => {

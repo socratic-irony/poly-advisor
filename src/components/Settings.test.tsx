@@ -64,4 +64,13 @@ describe('SettingsComponent', () => {
     fireEvent.change(select, { target: { value: 'gpt-4.1-mini' } });
     expect(defaultProps.onModelChange).toHaveBeenCalledWith('gpt-4.1-mini');
   });
+
+  it('renders the API key help link with correct attributes', () => {
+    render(<Settings {...defaultProps} />);
+    const link = screen.getByText('Get your API key here...');
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', 'https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
 });
