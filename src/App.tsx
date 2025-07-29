@@ -26,7 +26,6 @@ export default function App() {
     chatRef,
     setInput,
     ask,
-    newChat,
     clearScreen,
     handleRegenerate,
   } = useChat(model, searchDepth, forceSearch);
@@ -99,7 +98,6 @@ export default function App() {
           isLoading={isLoading}
           onInputChange={setInput}
           onAsk={ask}
-          onNewChat={newChat}
           onClearScreen={clearScreen}
           onKeyDown={handleKeyDown}
         />
