@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import { Copy, Check, RotateCw, Download, Mail } from 'lucide-react';
+import { useState } from 'react';
 import { Message as MessageType } from '../types';
 
 interface MessageProps {
@@ -13,6 +14,14 @@ interface MessageProps {
 }
 
 export default function Message({ message, index, isStreaming, copiedMessageIndex, onCopy, onRegenerate, onExport }: MessageProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const words = message.content.trim().split(/\s+/);
+  const shouldTruncate = Boolean(message.attachment) && words.length > 200;
+  const displayContent = shouldTruncate && !isExpanded
+    ? words.slice(0, 200).join(' ') + '...'
+    : message.content;
+
   return (
     <div className="group">
       <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
@@ -30,25 +39,16 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
         </span>
       </div>
       <div className="ml-8 sm:ml-11 whitespace-pre-wrap text-cal-poly-gray-dark leading-relaxed text-sm sm:text-base">
-        {/* File Attachment Indicator */}
-        {message.attachment && (
-          <div className="mb-3 p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center gap-2">
-            <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="text-blue-800 font-medium text-xs sm:text-sm">
-                Email Attachment
-              </div>
-              <div className="text-blue-600 text-xs truncate">
-                {message.attachment.fileName}
-              </div>
+        {message.attachment ? (
+          <div className="mb-3 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
+              <span className="text-gray-800 font-medium text-xs sm:text-sm">Email Attachment</span>
+              {message.attachment.fileName && (
+                <span className="ml-auto text-gray-600 text-xs truncate">{message.attachment.fileName}</span>
+              )}
             </div>
-            <div className="text-blue-500 text-xs uppercase font-semibold">
-              {message.attachment.type}
-            </div>
-          </div>
-        )}
-        
-        <ReactMarkdown
+            <ReactMarkdown
           components={{
             a: ({ node, ...props }) => (
               <a {...props} target="_blank" rel="noopener noreferrer" className="text-cal-poly-primary hover:text-cal-poly-green-light underline break-words" />
@@ -66,9 +66,41 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
             pre: ({ node, ...props }) => <pre {...props} className="bg-gray-100 text-gray-800 p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-mono overflow-x-auto mb-2 sm:mb-3" />,
             blockquote: ({ node, ...props }) => <blockquote {...props} className="border-l-4 border-cal-poly-primary pl-3 sm:pl-4 py-2 bg-gray-50 mb-2 sm:mb-3 italic" />
           }}
-        >
-          {message.content}
-        </ReactMarkdown>
+            >
+              {displayContent}
+            </ReactMarkdown>
+            {shouldTruncate && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mt-2 text-xs text-blue-600 hover:underline"
+              >
+                {isExpanded ? 'Show Less' : 'Show More'}
+              </button>
+            )}
+          </div>
+        ) : (
+          <ReactMarkdown
+            components={{
+              a: ({ node, ...props }) => (
+                <a {...props} target="_blank" rel="noopener noreferrer" className="text-cal-poly-primary hover:text-cal-poly-green-light underline break-words" />
+              ),
+              p: ({ node, ...props }) => <p {...props} className="mb-2 sm:mb-3 last:mb-0" />,
+              ul: ({ node, ...props }) => <ul {...props} className="list-disc ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
+              ol: ({ node, ...props }) => <ol {...props} className="list-decimal ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
+              li: ({ node, ...props }) => <li {...props} className="leading-relaxed" />,
+              h1: ({ node, ...props }) => <h1 {...props} className="text-xl sm:text-2xl font-bold text-cal-poly-primary mb-3 sm:mb-4 mt-4 sm:mt-6 first:mt-0" />,
+              h2: ({ node, ...props }) => <h2 {...props} className="text-lg sm:text-xl font-semibold text-cal-poly-primary mb-2 sm:mb-3 mt-3 sm:mt-5 first:mt-0" />,
+              h3: ({ node, ...props }) => <h3 {...props} className="text-base sm:text-lg font-semibold text-cal-poly-primary mb-2 mt-3 sm:mt-4 first:mt-0" />,
+              strong: ({ node, ...props }) => <strong {...props} className="font-semibold text-cal-poly-gray-dark" />,
+              em: ({ node, ...props }) => <em {...props} className="italic" />,
+              code: ({ node, ...props }) => <code {...props} className="bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-xs sm:text-sm font-mono break-words" />,
+              pre: ({ node, ...props }) => <pre {...props} className="bg-gray-100 text-gray-800 p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-mono overflow-x-auto mb-2 sm:mb-3" />,
+              blockquote: ({ node, ...props }) => <blockquote {...props} className="border-l-4 border-cal-poly-primary pl-3 sm:pl-4 py-2 bg-gray-50 mb-2 sm:mb-3 italic" />
+            }}
+          >
+            {message.content}
+          </ReactMarkdown>
+        )}
       </div>
 
       {message.role === 'assistant' && !isStreaming && (

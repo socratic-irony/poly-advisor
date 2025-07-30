@@ -89,7 +89,27 @@ describe('Message', () => {
     render(<Message {...defaultProps} message={messageWithAttachment} />);
     expect(screen.getByText('Email Attachment')).toBeInTheDocument();
     expect(screen.getByText('test-email.eml')).toBeInTheDocument();
-    expect(screen.getByText('eml')).toBeInTheDocument();
+  });
+
+  it('truncates long email content and toggles on click', () => {
+    const longContent = new Array(205).fill('word').join(' ');
+    const messageWithAttachment: MessageType = {
+      role: 'user',
+      content: longContent,
+      attachment: {
+        fileName: 'long-email.eml',
+        type: 'eml'
+      }
+    };
+
+    render(<Message {...defaultProps} message={messageWithAttachment} />);
+    expect(screen.getByText(/Email Attachment/)).toBeInTheDocument();
+    expect(screen.getByText('long-email.eml')).toBeInTheDocument();
+    expect(screen.getByText(/Show More/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText(/Show More/));
+    expect(screen.getByText(/Show Less/)).toBeInTheDocument();
+    expect(screen.getByText(longContent)).toBeInTheDocument();
   });
 
   it('does not display attachment section when no attachment', () => {
