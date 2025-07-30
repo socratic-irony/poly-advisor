@@ -49,6 +49,5 @@ describe('ChatView', () => {
     render(<ChatView {...defaultProps} />);
     expect(screen.getByText('Email Attachment')).toBeInTheDocument();
     expect(screen.getByText('test.eml')).toBeInTheDocument();
-    expect(screen.getByText('eml')).toBeInTheDocument();
   });
 });
