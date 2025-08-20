@@ -32,9 +32,24 @@ export default function SettingsModal({
 }: SettingsModalProps) {
   if (!isOpen) return null;
 
+  const handleSaveKey = () => {
+    if (!apiKey.trim()) return;
+    onSaveKey();
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+      data-testid="settings-overlay"
+    >
+      <div
+        className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-semibold text-cal-poly-primary">Settings</h2>
           <button
@@ -50,7 +65,7 @@ export default function SettingsModal({
           <Settings
             apiKey={apiKey}
             onApiKeyChange={onApiKeyChange}
-            onSaveKey={onSaveKey}
+            onSaveKey={handleSaveKey}
             onForgetKey={onForgetKey}
             searchDepth={searchDepth}
             onSearchDepthChange={onSearchDepthChange}
