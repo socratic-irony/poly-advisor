@@ -96,7 +96,7 @@ Build a single‑page web app with a simple chat UI that:
 
 ## 7) Model & Tools
 
-* **Model:** `gpt-4.1` (primary) or `gpt-4o` (fallback).
+* **Model:** `gpt-5-mini` (default); options include `gpt-5` or `gpt-4.1`.
 * **Tools:** `[{ type: "web_search" }]` (or `web_search_preview` where appropriate).
 * **Tool choice:** `"auto"` by default; **force** via UI toggle.
 * **Search depth:** If the tool exposes depth/context controls, set **Medium** by default; **High** when toggled. If not supported, encode depth preference in the **system prompt**.
@@ -132,7 +132,7 @@ Free text question or pasted email thread.
 
 ## 9) Request Assembly (Responses API)
 
-* `model`: `"gpt-4.1"` (fallback `"gpt-4o"`).
+* `model`: `"gpt-5-mini"` (other options: `"gpt-5"`, `"gpt-4.1"`).
 * `input`: array of roles: `system`, `developer`, `user`.
 * `tools`: `[ { "type": "web_search" } ]` (or `web_search_preview`).
 * `tool_choice`: `"auto"` or `{ "type": "web_search" }` when forced.
@@ -157,7 +157,7 @@ Free text question or pasted email thread.
 ## 11) Error Handling
 
 * **Missing/invalid API key**: Inline error with a link/hint to add a valid key; show **Forget Key** option.
-* **Tool/model mismatch (4xx)**: Fallback to `gpt-4o` or alternate tool name (`web_search_preview`).
+* **Tool/model mismatch (4xx)**: Fallback to `gpt-4.1` or alternate tool name (`web_search_preview`).
 * **Rate limits/network**: Exponential backoff; “Try again” button.
 * **No Cal Poly results**: Ask a brief clarifying question rather than guessing.
 
@@ -248,8 +248,9 @@ Free text question or pasted email thread.
   <label><input type="radio" name="depth" value="high" /> High search</label>
   <label><input type="checkbox" id="forceSearch" /> Force web search</label>
   <select id="model">
+    <option value="gpt-5-mini">gpt-5-mini</option>
+    <option value="gpt-5">gpt-5</option>
     <option value="gpt-4.1">gpt-4.1</option>
-    <option value="gpt-4o">gpt-4o</option>
   </select>
 </div>
 <p class="hint">Your key stays in this browser. Never commit it to code.</p>
@@ -341,7 +342,7 @@ Free text question or pasted email thread.
     render('You', query);
     els.q.value = '';
 
-    const model = els.model.value || "gpt-4.1";
+    const model = els.model.value || "gpt-5-mini";
     const tool = { type: "web_search" }; // or "web_search_preview"
     const toolChoice = els.forceSearch.checked ? { type: "web_search" } : "auto";
 
@@ -410,7 +411,7 @@ Free text question or pasted email thread.
 
 ```js
 // core.js
-export async function askOpenAI({ apiKey, prompt, previousResponseId, forceSearch, highDepth, model = "gpt-4.1" }) {
+export async function askOpenAI({ apiKey, prompt, previousResponseId, forceSearch, highDepth, model = "gpt-5-mini" }) {
   const depthText = highDepth
     ? "Use a high-depth web search within *.calpoly.edu."
     : "Use a medium-depth web search within *.calpoly.edu.";

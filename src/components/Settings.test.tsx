@@ -12,7 +12,7 @@ describe('SettingsComponent', () => {
     onSearchDepthChange: vi.fn(),
     forceSearch: true,
     onForceSearchChange: vi.fn(),
-    model: 'gpt-4o',
+    model: 'gpt-5-mini',
     onModelChange: vi.fn(),
   };
 
@@ -70,8 +70,8 @@ describe('SettingsComponent', () => {
   it('calls onModelChange when select is changed', () => {
     render(<Settings {...defaultProps} />);
     const select = screen.getByLabelText('LLM model:');
-    fireEvent.change(select, { target: { value: 'gpt-4.1-mini' } });
-    expect(defaultProps.onModelChange).toHaveBeenCalledWith('gpt-4.1-mini');
+    fireEvent.change(select, { target: { value: 'gpt-5' } });
+    expect(defaultProps.onModelChange).toHaveBeenCalledWith('gpt-5');
   });
 
   it('renders the API key help link with correct attributes', () => {
