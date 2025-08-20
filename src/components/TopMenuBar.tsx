@@ -1,4 +1,5 @@
-import { Settings } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+const SettingsIcon = lazy(() => import('lucide-react').then(m => ({ default: m.Settings })));
 
 interface TopMenuBarProps {
   onSettingsClick: () => void;
@@ -16,7 +17,9 @@ export default function TopMenuBar({ onSettingsClick }: TopMenuBarProps) {
         className="flex items-center gap-2 px-3 py-2 text-cal-poly-gray hover:text-cal-poly-primary hover:bg-gray-50 rounded-lg transition-colors"
         aria-label="Open settings"
       >
-        <Settings className="w-5 h-5" />
+          <Suspense fallback={null}>
+            <SettingsIcon className="w-5 h-5" />
+          </Suspense>
         <span className="text-sm font-medium">Settings</span>
       </button>
     </div>
