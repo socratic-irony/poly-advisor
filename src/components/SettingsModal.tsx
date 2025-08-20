@@ -1,4 +1,5 @@
-import { X } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+const CloseIcon = lazy(() => import('lucide-react').then(m => ({ default: m.X })));
 import Settings from './Settings';
 
 interface SettingsModalProps {
@@ -57,7 +58,9 @@ export default function SettingsModal({
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Close settings"
           >
-            <X className="w-5 h-5 text-cal-poly-gray" />
+              <Suspense fallback={null}>
+                <CloseIcon className="w-5 h-5 text-cal-poly-gray" />
+              </Suspense>
           </button>
         </div>
         

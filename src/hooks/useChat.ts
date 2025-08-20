@@ -41,6 +41,7 @@ export function useChat(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [previousResponseId, setPreviousResponseId] = useState<string | null>(null);
   const [streamingMessageIndex, setStreamingMessageIndex] = useState<number | null>(null);
+  const [missingKey, setMissingKey] = useState<boolean>(false);
   const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,11 +50,13 @@ export function useChat(
     }
   }, [messages]);
 
-  const createClient = (): OpenAI => {
+  const createClient = (): OpenAI | null => {
     const savedKey = localStorage.getItem('openai_key');
     if (!savedKey) {
-      throw new Error("Please add your OpenAI API key first.");
+      setMissingKey(true);
+      return null;
     }
+    setMissingKey(false);
     return new OpenAI({
       apiKey: savedKey,
       dangerouslyAllowBrowser: true,
@@ -70,6 +73,7 @@ export function useChat(
     const query = input.trim();
     if (!query || isLoading) return;
 
+    const assistantMessageIndex = messages.length + 1;
     try {
       setIsLoading(true);
       const userMessage: Message = { role: 'user', content: query };
@@ -77,12 +81,21 @@ export function useChat(
       setInput('');
 
       // Add placeholder assistant message for streaming simulation
-      const assistantMessageIndex = messages.length + 1;
       setStreamingMessageIndex(assistantMessageIndex);
       const placeholderMessage: Message = { role: 'assistant', content: '', sources: undefined };
       setMessages((prev) => [...prev, placeholderMessage]);
 
       const client = createClient();
+      if (!client) {
+        setMessages((prev) =>
+          prev.map((msg, idx) =>
+            idx === assistantMessageIndex
+              ? { ...msg, content: 'Please add your OpenAI API key in settings.' }
+              : msg
+          )
+        );
+        return;
+      }
       const tool = { type: "web_search" as const } as any;
       const toolChoice =
         forceSearch && model !== "gpt-5-mini"
@@ -146,58 +159,38 @@ export function useChat(
           if (!existingSource) {
             acc.push({
               title: annotation.title || annotation.url,
-              url: annotation.url
+              url: annotation.url,
             });
           }
           return acc;
         }, []);
 
-        // Simulate streaming by updating the message progressively
         const cleanedText = cleanMarkdown(text);
-        const words = cleanedText.split(' ');
-        let currentContent = '';
-        
-        // Stream the text word by word for a better user experience
-        for (let i = 0; i < words.length; i++) {
-          currentContent += (i > 0 ? ' ' : '') + words[i];
-          
-          setMessages((prev) => 
-            prev.map((msg, idx) => 
-              idx === assistantMessageIndex
-                ? { 
-                    ...msg, 
-                    content: currentContent,
-                    sources: i === words.length - 1 && uniqueSources.length > 0 ? uniqueSources : undefined
-                  }
-                : msg
-            )
-          );
-          
-          // Add a small delay to simulate streaming
-          if (i < words.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 30));
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: `Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
-      };
-      
-      if (streamingMessageIndex !== null) {
-        setMessages((prev) => 
-          prev.map((msg, idx) => 
-            idx === streamingMessageIndex
-              ? errorMessage
+        setMessages((prev) =>
+          prev.map((msg, idx) =>
+            idx === assistantMessageIndex
+              ? {
+                  ...msg,
+                  content: cleanedText,
+                  sources: uniqueSources.length > 0 ? uniqueSources : undefined,
+                }
               : msg
           )
         );
-      } else {
-        setMessages(prev => [...prev, errorMessage]);
       }
-    } finally {
+      } catch (error) {
+        console.error('Error:', error);
+        const errorMessage: Message = {
+          role: 'assistant',
+          content: `Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
+        };
+
+        setMessages((prev) =>
+          prev.map((msg, idx) =>
+            idx === assistantMessageIndex ? errorMessage : msg
+          )
+        );
+      } finally {
       setIsLoading(false);
       setStreamingMessageIndex(null);
     }
@@ -227,10 +220,18 @@ export function useChat(
     try {
       setIsLoading(true);
       const fileContent = await readFileAsText(file);
-      const parsedContent = stripHtml(parseEmlFile(fileContent));
-      
-      const userMessage: Message = { 
-        role: 'user', 
+      const { content, tooLarge } = parseEmlFile(fileContent);
+      if (tooLarge) {
+        setMessages(prev => [
+          ...prev,
+          { role: 'system', content: `Warning: ${file.name} exceeds the 5 MB limit and was not processed.` }
+        ]);
+        return;
+      }
+      const parsedContent = stripHtml(content);
+
+      const userMessage: Message = {
+        role: 'user',
         content: parsedContent,
         attachment: {
           fileName: file.name,
@@ -238,7 +239,7 @@ export function useChat(
         }
       };
       setMessages((prev) => [...prev, userMessage]);
-      
+
       // Process as email thread for instant reply
       await processEmailThread(parsedContent, file.name);
     } catch (error) {
@@ -256,8 +257,16 @@ export function useChat(
   const processFileForComment = async (file: File) => {
     try {
       const fileContent = await readFileAsText(file);
-      const parsedContent = stripHtml(parseEmlFile(fileContent));
-      
+      const { content, tooLarge } = parseEmlFile(fileContent);
+      if (tooLarge) {
+        setMessages(prev => [
+          ...prev,
+          { role: 'system', content: `Warning: ${file.name} exceeds the 5 MB limit and was not processed.` }
+        ]);
+        return;
+      }
+      const parsedContent = stripHtml(content);
+
       // Set the input with the parsed content so user can add comments
       setInput(`[Email attached: ${file.name}]\n\n${parsedContent}\n\n--- Add your comments below ---\n`);
     } catch (error) {
@@ -271,14 +280,24 @@ export function useChat(
   };
 
   const processEmailThread = async (content: string, fileName?: string) => {
+    const assistantMessageIndex = messages.length + (fileName ? 1 : 0);
     try {
       // Add placeholder assistant message for streaming simulation
-      const assistantMessageIndex = messages.length + (fileName ? 1 : 0);
       setStreamingMessageIndex(assistantMessageIndex);
       const placeholderMessage: Message = { role: 'assistant', content: '', sources: undefined };
       setMessages((prev) => [...prev, placeholderMessage]);
 
       const client = createClient();
+      if (!client) {
+        setMessages((prev) =>
+          prev.map((msg, idx) =>
+            idx === assistantMessageIndex
+              ? { ...msg, content: 'Please add your OpenAI API key in settings.' }
+              : msg
+          )
+        );
+        return;
+      }
       const tool = { type: "web_search" as const } as any;
       const toolChoice =
         forceSearch && model !== "gpt-5-mini"
@@ -339,38 +358,24 @@ export function useChat(
           if (!existingSource) {
             acc.push({
               title: annotation.title || annotation.url,
-              url: annotation.url
+              url: annotation.url,
             });
           }
           return acc;
         }, []);
 
-        // Simulate streaming by updating the message progressively
         const cleanedText = cleanMarkdown(text);
-        const words = cleanedText.split(' ');
-        let currentContent = '';
-        
-        // Stream the text word by word for a better user experience
-        for (let i = 0; i < words.length; i++) {
-          currentContent += (i > 0 ? ' ' : '') + words[i];
-          
-          setMessages((prev) => 
-            prev.map((msg, idx) => 
-              idx === assistantMessageIndex
-                ? { 
-                    ...msg, 
-                    content: currentContent,
-                    sources: i === words.length - 1 && uniqueSources.length > 0 ? uniqueSources : undefined
-                  }
-                : msg
-            )
-          );
-          
-          // Add a small delay to simulate streaming
-          if (i < words.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 30));
-          }
-        }
+        setMessages((prev) =>
+          prev.map((msg, idx) =>
+            idx === assistantMessageIndex
+              ? {
+                  ...msg,
+                  content: cleanedText,
+                  sources: uniqueSources.length > 0 ? uniqueSources : undefined,
+                }
+              : msg
+          )
+        );
       }
     } catch (error) {
       console.error('Error:', error);
@@ -378,18 +383,12 @@ export function useChat(
         role: 'assistant',
         content: `Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
       };
-      
-      if (streamingMessageIndex !== null) {
-        setMessages((prev) => 
-          prev.map((msg, idx) => 
-            idx === streamingMessageIndex
-              ? errorMessage
-              : msg
-          )
-        );
-      } else {
-        setMessages(prev => [...prev, errorMessage]);
-      }
+
+      setMessages((prev) =>
+        prev.map((msg, idx) =>
+          idx === assistantMessageIndex ? errorMessage : msg
+        )
+      );
     } finally {
       setIsLoading(false);
       setStreamingMessageIndex(null);
@@ -409,5 +408,6 @@ export function useChat(
     handleRegenerate,
     processFileForInstantReply,
     processFileForComment,
+    missingKey,
   };
 }
