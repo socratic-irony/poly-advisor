@@ -98,7 +98,7 @@ Build a single‑page web app with a simple chat UI that:
 
 * **Model:** `gpt-5-mini` (default); options include `gpt-5` or `gpt-4.1`.
 * **Tools:** `[{ type: "web_search" }]` (or `web_search_preview` where appropriate).
-* **Tool choice:** `"auto"` by default; **force** via UI toggle.
+* **Tool choice:** `"auto"` by default. Models other than `gpt-5-mini` may **force** via UI toggle.
 * **Search depth:** If the tool exposes depth/context controls, set **Medium** by default; **High** when toggled. If not supported, encode depth preference in the **system prompt**.
 
 ---
@@ -135,7 +135,7 @@ Free text question or pasted email thread.
 * `model`: `"gpt-5-mini"` (other options: `"gpt-5"`, `"gpt-4.1"`).
 * `input`: array of roles: `system`, `developer`, `user`.
 * `tools`: `[ { "type": "web_search" } ]` (or `web_search_preview`).
-* `tool_choice`: `"auto"` or `{ "type": "web_search" }` when forced.
+* `tool_choice`: `"auto"` for `gpt-5-mini`; `{ "type": "web_search" }` when forced on supported models.
 * `previous_response_id`: set when continuing the same session.
 * If the environment supports site allowlists or depth params on `web_search`, include them (e.g., `sites: ["calpoly.edu"]`, `search_context_size: "medium" | "high"`). Otherwise rely on prompts above.
 
