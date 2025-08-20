@@ -64,11 +64,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen cal-poly-gradient flex flex-col">
+    <div className="min-h-dvh cal-poly-gradient flex flex-col">
       {/* Mobile menu bar */}
       <TopMenuBar onSettingsClick={() => setIsSettingsModalOpen(true)} />
 
-      <div className="max-w-5xl mx-auto w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col h-screen">
+      <div className="max-w-5xl mx-auto w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col flex-1 overflow-y-auto">
         {/* Header */}
         <div className="mb-4 sm:mb-6">
           <div className="text-center mb-4 sm:mb-6">
