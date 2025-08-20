@@ -3,7 +3,7 @@ import { parseEmlFile, readFileAsText } from '../utils/emlParser';
 import { decodeBase64 } from './decodeBase64';
 
 describe('EML Parser', () => {
-  describe.skip('parseEmlFile', () => {
+  describe('parseEmlFile', () => {
     it('should extract headers and content from a simple email', () => {
       const emlContent = `From: sender@example.com
 To: recipient@example.com

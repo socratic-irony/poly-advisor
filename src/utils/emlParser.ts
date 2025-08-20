@@ -11,12 +11,12 @@ const MAX_PAYLOAD_SIZE = 5 * 1024 * 1024; // 5 MB
  * Decodes base64 sections and removes MIME artifacts.
  */
 
-export function parseEmlFile(content: string): { content: string; tooLarge: boolean } {
-  if (content.length > MAX_PAYLOAD_SIZE) {
-    console.warn('EML payload too large, skipping parse');
-    return { content, tooLarge: true };
-  }
+export function parseEmlFile(content: string): string {
   try {
+    if (content.length > MAX_PAYLOAD_SIZE) {
+      console.warn('EML payload too large, skipping parse');
+      return content;
+    }
     // Work with a copy of the original content
     let cleanContent = content;
 
@@ -90,10 +90,10 @@ export function parseEmlFile(content: string): { content: string; tooLarge: bool
         ? headers.join('\n') + '\n\n' + cleanContent
         : cleanContent;
 
-    return { content: result || content, tooLarge: false }; // Fallback to original content if parsing fails
+    return result || content; // Fallback to original content if parsing fails
   } catch (error) {
     console.warn('Failed to parse EML file:', error);
-    return { content, tooLarge: false }; // Return original content if parsing fails
+    return content; // Return original content if parsing fails
   }
 }
 
