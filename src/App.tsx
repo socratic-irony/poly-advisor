@@ -1,5 +1,5 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-const SettingsIcon = lazy(() => import('lucide-react').then(m => ({ default: m.Settings })));
+import React, { useState } from 'react';
+import { Settings } from 'lucide-react';
 import { useSettings } from './hooks/useSettings';
 import { useChat } from './hooks/useChat';
 import SettingsModal from './components/SettingsModal';
@@ -21,20 +21,19 @@ export default function App() {
     forgetKey,
   } = useSettings();
 
-    const {
-      messages,
-      input,
-      isLoading,
-      streamingMessageIndex,
-      chatRef,
-      setInput,
-      ask,
-      clearScreen,
-      handleRegenerate,
-      processFileForInstantReply,
-      processFileForComment,
-      missingKey,
-    } = useChat(model, searchDepth, forceSearch);
+  const {
+    messages,
+    input,
+    isLoading,
+    streamingMessageIndex,
+    chatRef,
+    setInput,
+    ask,
+    clearScreen,
+    handleRegenerate,
+    processFileForInstantReply,
+    processFileForComment,
+  } = useChat(model, searchDepth, forceSearch);
 
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
@@ -58,21 +57,11 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-    const handleCopy = async (index: number, content: string) => {
-      try {
-        await navigator.clipboard.writeText(content);
-        setCopiedMessageIndex(index);
-        setTimeout(() => setCopiedMessageIndex(null), 2000);
-      } catch (error) {
-        alert('Failed to copy text. Please copy manually.');
-      }
-    };
-
-    useEffect(() => {
-      if (missingKey) {
-        setIsSettingsModalOpen(true);
-      }
-    }, [missingKey]);
+  const handleCopy = (index: number, content: string) => {
+    navigator.clipboard.writeText(content);
+    setCopiedMessageIndex(index);
+    setTimeout(() => setCopiedMessageIndex(null), 2000);
+  };
 
   return (
     <div className="min-h-dvh cal-poly-gradient flex flex-col">
@@ -99,9 +88,7 @@ export default function App() {
             className="hidden md:flex absolute top-4 right-4 z-10 items-center gap-2 px-3 py-2 text-cal-poly-gray hover:text-cal-poly-primary hover:bg-white/50 rounded-lg transition-colors"
             aria-label="Open settings"
           >
-              <Suspense fallback={null}>
-                <SettingsIcon className="w-5 h-5" />
-              </Suspense>
+            <Settings className="w-5 h-5" />
             <span className="text-sm font-medium">Settings</span>
           </button>
 
