@@ -37,6 +37,15 @@ describe('SettingsComponent', () => {
     expect(defaultProps.onSaveKey).toHaveBeenCalled();
   });
 
+  it('does not allow saving without an API key', () => {
+    const onSaveKey = vi.fn();
+    render(<Settings {...defaultProps} apiKey="" onSaveKey={onSaveKey} />);
+    const button = screen.getByText('Save');
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(onSaveKey).not.toHaveBeenCalled();
+  });
+
   it('calls onForgetKey when the forget button is clicked', () => {
     render(<Settings {...defaultProps} />);
     const button = screen.getByText('Forget');

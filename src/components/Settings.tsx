@@ -31,7 +31,8 @@ export default function SettingsComponent({
             <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={onSaveKey}
-                className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 btn-cal-poly-primary rounded-lg font-medium text-sm"
+                disabled={!apiKey.trim()}
+                className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 btn-cal-poly-primary rounded-lg font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save
               </button>
