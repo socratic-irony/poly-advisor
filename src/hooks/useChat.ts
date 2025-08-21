@@ -66,6 +66,47 @@ export function useChat(
       : "Use a medium-depth web search within *.calpoly.edu.";
   };
 
+  const fetchSuggestions = async (question: string, answer: string): Promise<string[]> => {
+    try {
+      const client = createClient();
+      const response = await client.responses.create({
+        model,
+        input: [
+          {
+            role: "system",
+            content: [
+              {
+                type: "input_text" as const,
+                text: "Generate two brief follow-up questions a student might ask next based on the conversation."
+              }
+            ]
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text" as const,
+                text: `Original question: ${question}\nAnswer: ${answer}\nProvide two follow-up questions.`
+              }
+            ]
+          }
+        ]
+      });
+
+      const messageItem = (response.output || []).find((o: any) => o.type === "message");
+      const textObj = (messageItem as any)?.content?.find((c: any) => c.type === 'output_text');
+      const text = textObj?.text || '';
+      return text
+        .split('\n')
+        .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+        .filter(Boolean)
+        .slice(0, 2);
+    } catch (e) {
+      console.error('Error generating suggestions', e);
+      return [];
+    }
+  };
+
   const ask = async () => {
     const query = input.trim();
     if (!query || isLoading) return;
@@ -176,6 +217,15 @@ export function useChat(
           if (i < words.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 30));
           }
+        }
+
+        const suggestions = await fetchSuggestions(query, cleanedText);
+        if (suggestions.length > 0) {
+          setMessages(prev =>
+            prev.map((msg, idx) =>
+              idx === assistantMessageIndex ? { ...msg, suggestions } : msg
+            )
+          );
         }
       }
     } catch (error) {
@@ -368,6 +418,15 @@ export function useChat(
           if (i < words.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 30));
           }
+        }
+
+        const suggestions = await fetchSuggestions(content, cleanedText);
+        if (suggestions.length > 0) {
+          setMessages(prev =>
+            prev.map((msg, idx) =>
+              idx === assistantMessageIndex ? { ...msg, suggestions } : msg
+            )
+          );
         }
       }
     } catch (error) {
