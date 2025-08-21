@@ -14,7 +14,7 @@ describe('SettingsModal', () => {
     onSearchDepthChange: vi.fn(),
     forceSearch: true,
     onForceSearchChange: vi.fn(),
-    model: 'gpt-4o',
+    model: 'gpt-4.1',
     onModelChange: vi.fn(),
   };
 
