@@ -107,14 +107,13 @@ export function useChat(
       if (isEmailThread(query)) {
         userContent =
           "The following is an email thread. Infer roles (advisor = RJ, Philosophy; student = the other party). " +
-          "Draft a concise reply with cited Cal Poly URLs and append this signature block:\n\n" +
-          "Let me know if you have any questions or concerns. Thank you!\n\nBest,\nRyan\n\n" +
+          "Draft a concise reply with cited Cal Poly URLs. Do not include any signature or sign-off.\n\n" +
           "Email thread:\n\n" + query;
       }
 
       const devContent = [
         { type: "input_text" as const, text:
-          "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. " +
+          "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. Do not sign responses or add any signature. " +
           "Always produce inline citations and a Sources list with titles and URLs. Links must open in a new tab."
         }
       ];
@@ -301,13 +300,12 @@ export function useChat(
 
       const userContent =
         "The following is an email thread. Infer roles (advisor = RJ, Philosophy; student = the other party). " +
-        "Draft a concise reply with cited Cal Poly URLs and append this signature block:\n\n" +
-        "Let me know if you have any questions or concerns. Thank you!\n\nBest,\nRyan\n\n" +
+        "Draft a concise reply with cited Cal Poly URLs. Do not include any signature or sign-off.\n\n" +
         "Email thread:\n\n" + content;
 
       const devContent = [
         { type: "input_text" as const, text:
-          "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. " +
+          "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. Do not sign responses or add any signature. " +
           "Always produce inline citations and a Sources list with titles and URLs. Links must open in a new tab."
         }
       ];

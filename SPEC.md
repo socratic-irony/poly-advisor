@@ -24,14 +24,6 @@ Build a single‑page web app with a simple chat UI that:
 * **Search depth:** Default **Medium** with a **High** toggle.
 * **Links:** Open in a **new tab** (`target="_blank" rel="noopener"`).
 * **History:** Defer persistent chat history for now (no `localStorage` messages); only store the **API key** locally.
-* **Email‑reply signature block:**
-
-  ```
-  Let me know if you have any questions or concerns. Thank you!
-
-  Best,
-  Ryan
-  ```
 
 ---
 
@@ -39,7 +31,7 @@ Build a single‑page web app with a simple chat UI that:
 
 * **Faculty/Advisors (RJ):** Clarify policies, deadlines, forms; draft replies to student emails with citations.
 * **Students/Staff:** Ask procedural questions (add/drop, major change, advising appointments, catalog rules).
-* **Email thread paste:** App infers roles (RJ vs. student) and drafts a concise, cited reply with the signature block.
+* **Email thread paste:** App infers roles (RJ vs. student) and drafts a concise, cited reply without a signature.
 
 ---
 
@@ -62,7 +54,7 @@ Build a single‑page web app with a simple chat UI that:
 
    * Detect email threads (heuristics: headers like “From:”, “Subject:”, or “On … wrote:”).
    * Infer roles: **RJ = advisor**; other party = student.
-   * Output: concise reply with cited Cal Poly URLs + **signature block** appended.
+   * Output: concise reply with cited Cal Poly URLs and no signature.
 
 4. **Follow‑ups**
 
@@ -109,14 +101,7 @@ Build a single‑page web app with a simple chat UI that:
 You are a Cal Poly advisor assistant. Use the web search tool and restrict yourself to results from `*.calpoly.edu`. Prefer the most recent official policy, catalog, Registrar, and department advising pages. When a user asks about processes (forms, approvals, who to contact), give clear step‑by‑step instructions. If the exact academic year is unclear, cite the most recent year you can find and label it; if the specific year is not available, link the closest official source. Always include inline citations in the body and a “Sources” list with titles and URLs. Use absolute dates like “July 28, 2025.” If information seems ambiguous or missing on calpoly.edu, ask a brief clarifying question before committing to an answer. Tone: conversational but clear.
 
 **Developer (fixed)**
-Identity and defaults: The advisor is **RJ** (Philosophy). Assume the student’s major is **PHIL** unless otherwise stated. For pasted email threads, infer roles (RJ = advisor) and produce a concise reply with cited Cal Poly URLs. Append this signature block:
-
-```
-Let me know if you have any questions or concerns. Thank you!
-
-Best,
-Ryan
-```
+Identity and defaults: The advisor is **RJ** (Philosophy). Assume the student’s major is **PHIL** unless otherwise stated. For pasted email threads, infer roles (RJ = advisor) and produce a concise reply with cited Cal Poly URLs. Do not include any signature or sign-off.
 
 Citations: Ensure inline bracketed markers map to a “Sources” list. Prefer official, current pages. If you cannot find the exact year requested, say so and link the nearest official source.
 
@@ -203,7 +188,7 @@ Free text question or pasted email thread.
 
 3. **Email paste**:
 
-   * Detects RJ vs. student; drafts a concise reply with citations + signature block.
+   * Detects RJ vs. student; drafts a concise reply with citations and no signature.
 
 ---
 
@@ -362,14 +347,13 @@ Free text question or pasted email thread.
     if (isEmailThread(query)) {
       userContent =
         "The following is an email thread. Infer roles (advisor = RJ, Philosophy; student = the other party). " +
-        "Draft a concise reply with cited Cal Poly URLs and append this signature block:\n\n" +
-        "Let me know if you have any questions or concerns. Thank you!\n\nBest,\nRyan\n\n" +
+        "Draft a concise reply with cited Cal Poly URLs. Do not include any signature or sign-off.\n\n" +
         "Email thread:\n\n" + query;
     }
 
     const dev = [
       { type: "input_text", text:
-        "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. " +
+        "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. Do not sign responses or add any signature. " +
         "Always produce inline citations and a Sources list with titles and URLs. Links must open in a new tab."
       }
     ];
@@ -462,6 +446,6 @@ export async function askOpenAI({ apiKey, prompt, previousResponseId, forceSearc
 * [ ] Domain restriction via tool (if available) or prompts.
 * [ ] Parse `message.content[0].text` and `url_citation` annotations to render inline citations + Sources.
 * [ ] Freshness rule and absolute dates enforced in prompts.
-* [ ] Email‑thread detection and signature block insertion.
+* [ ] Email‑thread detection (no signature).
 * [ ] GH Pages deploy with Vite `base: '/poly-advisor/'` (if using Vite).
 * [ ] Manual tests for deadlines, PHIL major change, and email paste.
