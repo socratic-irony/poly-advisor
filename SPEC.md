@@ -96,9 +96,9 @@ Build a single‑page web app with a simple chat UI that:
 
 ## 7) Model & Tools
 
-* **Model:** `gpt-5-mini` (default); options include `gpt-5` or `gpt-4.1`.
+* **Model:** `gpt-4.1`.
 * **Tools:** `[{ type: "web_search" }]` (or `web_search_preview` where appropriate).
-* **Tool choice:** `"auto"` by default. Models other than `gpt-5-mini` may **force** via UI toggle.
+* **Tool choice:** `"auto"` by default, or `{ type: "web_search" }` when Force Web Search is enabled.
 * **Search depth:** If the tool exposes depth/context controls, set **Medium** by default; **High** when toggled. If not supported, encode depth preference in the **system prompt**.
 
 ---
@@ -132,10 +132,10 @@ Free text question or pasted email thread.
 
 ## 9) Request Assembly (Responses API)
 
-* `model`: `"gpt-5-mini"` (other options: `"gpt-5"`, `"gpt-4.1"`).
+* `model`: `"gpt-4.1"`.
 * `input`: array of roles: `system`, `developer`, `user`.
 * `tools`: `[ { "type": "web_search" } ]` (or `web_search_preview`).
-* `tool_choice`: `"auto"` for `gpt-5-mini`; `{ "type": "web_search" }` when forced on supported models.
+* `tool_choice`: `"auto"` by default; `{ "type": "web_search" }` when Force Web Search is enabled.
 * `previous_response_id`: set when continuing the same session.
 * If the environment supports site allowlists or depth params on `web_search`, include them (e.g., `sites: ["calpoly.edu"]`, `search_context_size: "medium" | "high"`). Otherwise rely on prompts above.
 
@@ -248,8 +248,6 @@ Free text question or pasted email thread.
   <label><input type="radio" name="depth" value="high" /> High search</label>
   <label><input type="checkbox" id="forceSearch" /> Force web search</label>
   <select id="model">
-    <option value="gpt-5-mini">gpt-5-mini</option>
-    <option value="gpt-5">gpt-5</option>
     <option value="gpt-4.1">gpt-4.1</option>
   </select>
 </div>
@@ -342,7 +340,7 @@ Free text question or pasted email thread.
     render('You', query);
     els.q.value = '';
 
-    const model = els.model.value || "gpt-5-mini";
+    const model = els.model.value || "gpt-4.1";
     const tool = { type: "web_search" }; // or "web_search_preview"
     const toolChoice = els.forceSearch.checked ? { type: "web_search" } : "auto";
 
@@ -411,7 +409,7 @@ Free text question or pasted email thread.
 
 ```js
 // core.js
-export async function askOpenAI({ apiKey, prompt, previousResponseId, forceSearch, highDepth, model = "gpt-5-mini" }) {
+export async function askOpenAI({ apiKey, prompt, previousResponseId, forceSearch, highDepth, model = "gpt-4.1" }) {
   const depthText = highDepth
     ? "Use a high-depth web search within *.calpoly.edu."
     : "Use a medium-depth web search within *.calpoly.edu.";

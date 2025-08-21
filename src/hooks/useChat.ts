@@ -85,7 +85,7 @@ export function useChat(
       const client = createClient();
       const tool = { type: "web_search" as const } as any;
       const toolChoice =
-        forceSearch && model !== "gpt-5-mini"
+        forceSearch
           ? ({ type: "web_search" as const } as any)
           : ("auto" as const);
 
@@ -281,7 +281,7 @@ export function useChat(
       const client = createClient();
       const tool = { type: "web_search" as const } as any;
       const toolChoice =
-        forceSearch && model !== "gpt-5-mini"
+        forceSearch
           ? ({ type: "web_search" as const } as any)
           : ("auto" as const);
 
