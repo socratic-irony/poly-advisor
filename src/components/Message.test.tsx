@@ -36,6 +36,13 @@ describe.skip('Message', () => {
     expect(screen.queryByText('Test Source')).not.toBeInTheDocument();
   });
 
+  it('renders suggestions when provided', () => {
+    const messageWithSuggestions = { ...message, suggestions: ['Follow-up one', 'Follow-up two'] };
+    render(<Message {...defaultProps} message={messageWithSuggestions} />);
+    expect(screen.getByText('Follow-up one')).toBeInTheDocument();
+    expect(screen.getByText('Follow-up two')).toBeInTheDocument();
+  });
+
   it('calls onCopy when copy button is clicked', () => {
     render(<Message {...defaultProps} />);
     const copyButton = screen.getByText('Copy');

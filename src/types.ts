@@ -5,6 +5,7 @@ export interface Message {
     title: string;
     url: string;
   }>;
+  suggestions?: string[];
   attachment?: {
     fileName: string;
     type: 'eml';

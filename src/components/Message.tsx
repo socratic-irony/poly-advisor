@@ -181,6 +181,27 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
           </ol>
         </div>
       )}
+
+      {message.suggestions && message.suggestions.length > 0 && (
+        <div className="ml-8 sm:ml-11 mt-3 sm:mt-4 flex flex-wrap gap-2">
+          {message.suggestions.map((suggestion: string, idx: number) => {
+            const colorClasses = [
+              'bg-green-50 text-green-700 border-green-200',
+              'bg-amber-50 text-amber-700 border-amber-200',
+              'bg-blue-50 text-blue-700 border-blue-200',
+            ];
+            const classes = colorClasses[idx % colorClasses.length];
+            return (
+              <div
+                key={idx}
+                className={`px-3 py-1 rounded-full border text-xs sm:text-sm ${classes}`}
+              >
+                {suggestion}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
