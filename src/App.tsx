@@ -57,6 +57,14 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
+  const handleSuggestionClick = (suggestion: string) => {
+    setInput(suggestion);
+    // Use setTimeout to ensure the input is set before calling ask
+    setTimeout(() => {
+      ask();
+    }, 0);
+  };
+
   const handleCopy = (index: number, content: string) => {
     navigator.clipboard.writeText(content);
     setCopiedMessageIndex(index);
@@ -103,6 +111,7 @@ export default function App() {
             onExport={exportToMarkdown}
             onFileInstantReply={processFileForInstantReply}
             onFileComment={processFileForComment}
+            onSuggestionClick={handleSuggestionClick}
           />
         </div>
 

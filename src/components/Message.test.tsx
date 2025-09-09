@@ -3,7 +3,7 @@ import Message from './Message';
 import { describe, it, expect, vi } from 'vitest';
 import { Message as MessageType } from '../types';
 
-describe.skip('Message', () => {
+describe('Message', () => {
   const message: MessageType = {
     role: 'assistant',
     content: 'This is a test message.',
@@ -122,5 +122,26 @@ describe.skip('Message', () => {
   it('does not display attachment section when no attachment', () => {
     render(<Message {...defaultProps} />);
     expect(screen.queryByText('Email Attachment')).not.toBeInTheDocument();
+  });
+
+  it('calls onSuggestionClick when suggestion button is clicked', () => {
+    const onSuggestionClick = vi.fn();
+    const messageWithSuggestions = { ...message, suggestions: ['Follow-up one', 'Follow-up two'] };
+    render(<Message {...defaultProps} message={messageWithSuggestions} onSuggestionClick={onSuggestionClick} />);
+    
+    const suggestionButton = screen.getByText('Follow-up one').closest('button');
+    expect(suggestionButton).toBeInTheDocument();
+    
+    fireEvent.click(suggestionButton!);
+    expect(onSuggestionClick).toHaveBeenCalledWith('Follow-up one');
+  });
+
+  it('renders suggestions with Ask arrow and improved styling', () => {
+    const messageWithSuggestions = { ...message, suggestions: ['Follow-up one', 'Follow-up two'] };
+    render(<Message {...defaultProps} message={messageWithSuggestions} />);
+    
+    expect(screen.getByText('Follow-up one')).toBeInTheDocument();
+    expect(screen.getByText('Follow-up two')).toBeInTheDocument();
+    expect(screen.getAllByText('Ask →')).toHaveLength(2);
   });
 });
