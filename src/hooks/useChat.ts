@@ -305,6 +305,7 @@ export function useChat(
   };
 
   const clearScreen = () => {
+    setPreviousResponseId(null);
     setStreamingMessageIndex(null);
     setMessages([]);
   };
