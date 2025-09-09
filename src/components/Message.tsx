@@ -1,6 +1,6 @@
-import { lazy, Suspense, useState } from 'react';
-const ReactMarkdown = lazy(() => import('react-markdown'));
+import { useState } from 'react';
 import { Copy, Check, RotateCw, Download, Mail } from './icons';
+import SimpleMarkdown from './SimpleMarkdown';
 import { Message as MessageType } from '../types';
 
 interface MessageProps {
@@ -48,29 +48,27 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
                 <span className="ml-auto text-gray-600 text-xs truncate">{message.attachment.fileName}</span>
               )}
             </div>
-              <Suspense fallback={null}>
-              <ReactMarkdown
-          components={{
-            a: ({ node, ...props }) => (
-              <a {...props} target="_blank" rel="noopener noreferrer" className="text-cal-poly-primary hover:text-cal-poly-green-light underline break-words" />
-            ),
-            p: ({ node, ...props }) => <p {...props} className="mb-2 sm:mb-3 last:mb-0" />,
-            ul: ({ node, ...props }) => <ul {...props} className="list-disc ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
-            ol: ({ node, ...props }) => <ol {...props} className="list-decimal ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
-            li: ({ node, ...props }) => <li {...props} className="leading-relaxed" />,
-            h1: ({ node, ...props }) => <h1 {...props} className="text-xl sm:text-2xl font-bold text-cal-poly-primary mb-3 sm:mb-4 mt-4 sm:mt-6 first:mt-0" />,
-            h2: ({ node, ...props }) => <h2 {...props} className="text-lg sm:text-xl font-semibold text-cal-poly-primary mb-2 sm:mb-3 mt-3 sm:mt-5 first:mt-0" />,
-            h3: ({ node, ...props }) => <h3 {...props} className="text-base sm:text-lg font-semibold text-cal-poly-primary mb-2 mt-3 sm:mt-4 first:mt-0" />,
-            strong: ({ node, ...props }) => <strong {...props} className="font-semibold text-cal-poly-gray-dark" />,
-            em: ({ node, ...props }) => <em {...props} className="italic" />,
-            code: ({ node, ...props }) => <code {...props} className="bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-xs sm:text-sm font-mono break-words" />,
-            pre: ({ node, ...props }) => <pre {...props} className="bg-gray-100 text-gray-800 p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-mono overflow-x-auto mb-2 sm:mb-3" />,
-            blockquote: ({ node, ...props }) => <blockquote {...props} className="border-l-4 border-cal-poly-primary pl-3 sm:pl-4 py-2 bg-gray-50 mb-2 sm:mb-3 italic" />
-          }}
-            >
-              {displayContent}
-              </ReactMarkdown>
-              </Suspense>
+              <SimpleMarkdown
+                components={{
+                  a: ({ ...props }) => (
+                    <a {...props} target="_blank" rel="noopener noreferrer" className="text-cal-poly-primary hover:text-cal-poly-green-light underline break-words" />
+                  ),
+                  p: ({ ...props }) => <p {...props} className="mb-2 sm:mb-3 last:mb-0" />,
+                  ul: ({ ...props }) => <ul {...props} className="list-disc ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
+                  ol: ({ ...props }) => <ol {...props} className="list-decimal ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
+                  li: ({ ...props }) => <li {...props} className="leading-relaxed" />,
+                  h1: ({ ...props }) => <h1 {...props} className="text-xl sm:text-2xl font-bold text-cal-poly-primary mb-3 sm:mb-4 mt-4 sm:mt-6 first:mt-0" />,
+                  h2: ({ ...props }) => <h2 {...props} className="text-lg sm:text-xl font-semibold text-cal-poly-primary mb-2 sm:mb-3 mt-3 sm:mt-5 first:mt-0" />,
+                  h3: ({ ...props }) => <h3 {...props} className="text-base sm:text-lg font-semibold text-cal-poly-primary mb-2 mt-3 sm:mt-4 first:mt-0" />,
+                  strong: ({ ...props }) => <strong {...props} className="font-semibold text-cal-poly-gray-dark" />,
+                  em: ({ ...props }) => <em {...props} className="italic" />,
+                  code: ({ ...props }) => <code {...props} className="bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-xs sm:text-sm font-mono break-words" />,
+                  pre: ({ ...props }) => <pre {...props} className="bg-gray-100 text-gray-800 p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-mono overflow-x-auto mb-2 sm:mb-3" />,
+                  blockquote: ({ ...props }) => <blockquote {...props} className="border-l-4 border-cal-poly-primary pl-3 sm:pl-4 py-2 bg-gray-50 mb-2 sm:mb-3 italic" />
+                }}
+              >
+                {displayContent}
+              </SimpleMarkdown>
             {shouldTruncate && (
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
@@ -81,29 +79,27 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
             )}
           </div>
         ) : (
-            <Suspense fallback={null}>
-            <ReactMarkdown
-            components={{
-              a: ({ node, ...props }) => (
-                <a {...props} target="_blank" rel="noopener noreferrer" className="text-cal-poly-primary hover:text-cal-poly-green-light underline break-words" />
-              ),
-              p: ({ node, ...props }) => <p {...props} className="mb-2 sm:mb-3 last:mb-0" />,
-              ul: ({ node, ...props }) => <ul {...props} className="list-disc ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
-              ol: ({ node, ...props }) => <ol {...props} className="list-decimal ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
-              li: ({ node, ...props }) => <li {...props} className="leading-relaxed" />,
-              h1: ({ node, ...props }) => <h1 {...props} className="text-xl sm:text-2xl font-bold text-cal-poly-primary mb-3 sm:mb-4 mt-4 sm:mt-6 first:mt-0" />,
-              h2: ({ node, ...props }) => <h2 {...props} className="text-lg sm:text-xl font-semibold text-cal-poly-primary mb-2 sm:mb-3 mt-3 sm:mt-5 first:mt-0" />,
-              h3: ({ node, ...props }) => <h3 {...props} className="text-base sm:text-lg font-semibold text-cal-poly-primary mb-2 mt-3 sm:mt-4 first:mt-0" />,
-              strong: ({ node, ...props }) => <strong {...props} className="font-semibold text-cal-poly-gray-dark" />,
-              em: ({ node, ...props }) => <em {...props} className="italic" />,
-              code: ({ node, ...props }) => <code {...props} className="bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-xs sm:text-sm font-mono break-words" />,
-              pre: ({ node, ...props }) => <pre {...props} className="bg-gray-100 text-gray-800 p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-mono overflow-x-auto mb-2 sm:mb-3" />,
-              blockquote: ({ node, ...props }) => <blockquote {...props} className="border-l-4 border-cal-poly-primary pl-3 sm:pl-4 py-2 bg-gray-50 mb-2 sm:mb-3 italic" />
-            }}
-          >
-            {message.content}
-            </ReactMarkdown>
-            </Suspense>
+            <SimpleMarkdown
+              components={{
+                a: ({ ...props }) => (
+                  <a {...props} target="_blank" rel="noopener noreferrer" className="text-cal-poly-primary hover:text-cal-poly-green-light underline break-words" />
+                ),
+                p: ({ ...props }) => <p {...props} className="mb-2 sm:mb-3 last:mb-0" />,
+                ul: ({ ...props }) => <ul {...props} className="list-disc ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
+                ol: ({ ...props }) => <ol {...props} className="list-decimal ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
+                li: ({ ...props }) => <li {...props} className="leading-relaxed" />,
+                h1: ({ ...props }) => <h1 {...props} className="text-xl sm:text-2xl font-bold text-cal-poly-primary mb-3 sm:mb-4 mt-4 sm:mt-6 first:mt-0" />,
+                h2: ({ ...props }) => <h2 {...props} className="text-lg sm:text-xl font-semibold text-cal-poly-primary mb-2 sm:mb-3 mt-3 sm:mt-5 first:mt-0" />,
+                h3: ({ ...props }) => <h3 {...props} className="text-base sm:text-lg font-semibold text-cal-poly-primary mb-2 mt-3 sm:mt-4 first:mt-0" />,
+                strong: ({ ...props }) => <strong {...props} className="font-semibold text-cal-poly-gray-dark" />,
+                em: ({ ...props }) => <em {...props} className="italic" />,
+                code: ({ ...props }) => <code {...props} className="bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-xs sm:text-sm font-mono break-words" />,
+                pre: ({ ...props }) => <pre {...props} className="bg-gray-100 text-gray-800 p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-mono overflow-x-auto mb-2 sm:mb-3" />,
+                blockquote: ({ ...props }) => <blockquote {...props} className="border-l-4 border-cal-poly-primary pl-3 sm:pl-4 py-2 bg-gray-50 mb-2 sm:mb-3 italic" />
+              }}
+            >
+              {message.content}
+            </SimpleMarkdown>
         )}
       </div>
 
