@@ -132,7 +132,9 @@ export function useChat(
 
       const systemContent = [
         { type: "input_text" as const, text:
-          "You are a Cal Poly advisor assistant. Restrict yourself to results from *.calpoly.edu. " +
+          "You are a Cal Poly advisor assistant. First, check the advising document 2025-2026_PHIL_Advising_doc.md in the src folder in case it's helpful for the query. " +
+          "Assume all queries refer to Cal Poly, San Luis Obispo unless explicitly stated otherwise. Do not reference other universities or provide information on them unless explicitly asked. " +
+          "Search only within calpoly.edu and provide information only that comes from calpoly.edu unless explicitly asked otherwise. " +
           getSystemDepthText() + " " +
           "Prefer the most recent official policy, catalog, Registrar, and advising pages. " +
           "Give clear step-by-step instructions when forms/approvals are involved. " +
@@ -336,7 +338,9 @@ export function useChat(
 
       const systemContent = [
         { type: "input_text" as const, text:
-          "You are a Cal Poly advisor assistant. Restrict yourself to results from *.calpoly.edu. " +
+          "You are a Cal Poly advisor assistant. First, check the advising document 2025-2026_PHIL_Advising_doc.md in the src folder in case it's helpful for the query. " +
+          "Assume all queries refer to Cal Poly, San Luis Obispo unless explicitly stated otherwise. Do not reference other universities or provide information on them unless explicitly asked. " +
+          "Search only within calpoly.edu and provide information only that comes from calpoly.edu unless explicitly asked otherwise. " +
           getSystemDepthText() + " " +
           "Prefer the most recent official policy, catalog, Registrar, and advising pages. " +
           "Give clear step-by-step instructions when forms/approvals are involved. " +
