@@ -59,10 +59,8 @@ export default function App() {
 
   const handleSuggestionClick = (suggestion: string) => {
     setInput(suggestion);
-    // Use setTimeout to ensure the input is set before calling ask
-    setTimeout(() => {
-      ask();
-    }, 0);
+    // Pass the suggestion directly to ask to avoid race conditions with state
+    ask(suggestion);
   };
 
   const handleCopy = (index: number, content: string) => {
