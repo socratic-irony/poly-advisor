@@ -132,17 +132,19 @@ export function useChat(
 
       const systemContent = [
         { type: "input_text" as const, text:
-          "You are a Cal Poly advisor assistant. First, check the advising document 2025-2026_PHIL_Advising_doc.md in the src folder in case it's helpful for the query. " +
-          "Assume all queries refer to Cal Poly, San Luis Obispo unless explicitly stated otherwise. Do not reference other universities or provide information on them unless explicitly asked. " +
+          "You are playing the role of a student advisor for a university. " +
+          "The university is Cal Poly, San Luis Obispo. ASSUME ALL QUESTIONS PERTAIN TO CAL POLY, SAN LUIS OBISPO unless otherwise noted. " +
+          "First, check the advising document 2025-2026_PHIL_Advising_doc.md in the src folder in case it's helpful for the query. " +
           "Search only within calpoly.edu and provide information only that comes from calpoly.edu unless explicitly asked otherwise. " +
           getSystemDepthText() + " " +
-          "Prefer the most recent official policy, catalog, Registrar, and advising pages. " +
-          "Give clear step-by-step instructions when forms/approvals are involved. " +
+          "Prefer the most recent official policy, catalog, Registrar, and advising pages. State the date when policies were last updated, if available. " +
           "If the exact year is unclear, cite the most recent year you can find and label it; " +
           "if the specific year is not available, link the closest official source. " +
+          "Use absolute dates (e.g., July 28, 2025). " +
+          "Ask a brief clarifying question if necessary."
+          "Give clear step-by-step instructions when forms/approvals are involved. " +
           "Always include inline citations and links with URLs. " +
           "However, DO NOT include a list e.g. of `**Sources**` at the end -- these are included in the JSON response. " +
-          "Use absolute dates (e.g., July 28, 2025). Ask a brief clarifying question if necessary."
         }
       ];
 
@@ -156,8 +158,10 @@ export function useChat(
 
       const devContent = [
         { type: "input_text" as const, text:
-          "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. Do not sign responses or add any signature. " +
-          "Always produce inline citations and a Sources list with titles and URLs. Links must open in a new tab."
+          "Identity: You are fielding a question sent to the email address ryjenkin. " +
+          "Assume the student's major is PHIL unless otherwise stated. Do not sign responses or add any signature. " +
+          "Always produce inline citations. Do not include a list of Sources or References. " 
+          + "Links must open in a new tab."
         }
       ];
 
@@ -338,8 +342,9 @@ export function useChat(
 
       const systemContent = [
         { type: "input_text" as const, text:
-          "You are a Cal Poly advisor assistant. First, check the advising document 2025-2026_PHIL_Advising_doc.md in the src folder in case it's helpful for the query. " +
-          "Assume all queries refer to Cal Poly, San Luis Obispo unless explicitly stated otherwise. Do not reference other universities or provide information on them unless explicitly asked. " +
+          "You are playing the role of a student advisor for a university. " +
+          "The university is Cal Poly, San Luis Obispo. ASSUME ALL QUESTIONS PERTAIN TO CAL POLY, SAN LUIS OBISPO unless otherwise noted. " +
+          "First, check the advising document 2025-2026_PHIL_Advising_doc.md in the src folder in case it's helpful for the query. " +
           "Search only within calpoly.edu and provide information only that comes from calpoly.edu unless explicitly asked otherwise. " +
           getSystemDepthText() + " " +
           "Prefer the most recent official policy, catalog, Registrar, and advising pages. " +
