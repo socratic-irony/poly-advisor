@@ -10,6 +10,23 @@ export default defineConfig({
       '@': '/src'
     }
   },
+  build: {
+    // Optimize chunk splitting
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate vendor dependencies that change less frequently
+          vendor: ['react', 'react-dom'],
+          // OpenAI is large, keep it separate for better caching
+          openai: ['openai'],
+          // UI libraries that are stable
+          ui: ['lucide-react', 'markdown-to-jsx'],
+        },
+      },
+    },
+    // Increase chunk size warning limit since we've optimized
+    chunkSizeWarningLimit: 500,
+  },
   test: {
     globals: true,
     environment: 'jsdom',

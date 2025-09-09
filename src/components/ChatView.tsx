@@ -1,7 +1,6 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState } from 'react';
 import { Message as MessageType } from '../types';
-const MailIcon = lazy(() => import('lucide-react').then(m => ({ default: m.Mail })));
-const FileTextIcon = lazy(() => import('lucide-react').then(m => ({ default: m.FileText })));
+import { Mail, FileText } from 'lucide-react';
 import Message from './Message';
 
 interface ChatViewProps {
@@ -129,9 +128,7 @@ export default function ChatView({
             onDrop={handleInstantReplyDrop}
             onDragOver={handleDragOver}
           >
-              <Suspense fallback={null}>
-                <MailIcon className="w-12 h-12 text-green-600 mb-4" />
-              </Suspense>
+            <Mail className="w-12 h-12 text-green-600 mb-4" />
             <h3 className="text-lg font-semibold text-green-800 mb-2 text-center">
               Instant Reply
             </h3>
@@ -149,9 +146,7 @@ export default function ChatView({
             onDrop={handleCommentDrop}
             onDragOver={handleDragOver}
           >
-              <Suspense fallback={null}>
-                <FileTextIcon className="w-12 h-12 text-blue-600 mb-4" />
-              </Suspense>
+            <FileText className="w-12 h-12 text-blue-600 mb-4" />
             <h3 className="text-lg font-semibold text-blue-800 mb-2 text-center">
               Drop and Comment
             </h3>
