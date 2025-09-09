@@ -87,6 +87,17 @@ This project uses automated pre-commit hooks that will:
 - Ensure touch targets are at least 44x44px
 - Test with browser developer tools mobile emulation
 
+## API Helper
+
+For server-side or scripting scenarios, the `openai-responses.js` file demonstrates how to call the OpenAI Responses API while restricting web search to Cal Poly domains only.
+
+```bash
+export OPENAI_API_KEY=sk-...
+node example.js
+```
+
+`completeWithDomainFilteredSearch(history)` automatically limits searches to `calpoly.edu` and its subdomains.
+
 ## Deployment
 
 This app is configured for GitHub Pages deployment. Push to the main branch to trigger automatic deployment.

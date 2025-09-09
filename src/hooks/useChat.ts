@@ -4,6 +4,8 @@ import { Message } from '../types';
 import { parseEmlFile, readFileAsText } from '../utils/emlParser';
 import { stripHtml } from '../utils/stripHtml';
 import { loadAdvisingDocument, formatAdvisingDocumentForPrompt } from '../utils/advisingDocument';
+// @ts-ignore: openai-responses.js is a plain JS helper outside the TS root
+import { ALLOWED_DOMAINS } from '../../openai-responses.js';
 
 // Helper functions
 const isEmailThread = (text: string): boolean => {
@@ -187,7 +189,7 @@ export function useChat(
       setMessages((prev) => [...prev, placeholderMessage]);
 
       const client = createClient();
-      const tool = { type: "web_search" as const } as any;
+      const tool = { type: "web_search", filters: { allowed_domains: ALLOWED_DOMAINS } } as any;
       const toolChoice =
         forceSearch
           ? ({ type: "web_search" as const } as any)
@@ -371,7 +373,7 @@ export function useChat(
       setMessages((prev) => [...prev, placeholderMessage]);
 
       const client = createClient();
-      const tool = { type: "web_search" as const } as any;
+      const tool = { type: "web_search", filters: { allowed_domains: ALLOWED_DOMAINS } } as any;
       const toolChoice =
         forceSearch
           ? ({ type: "web_search" as const } as any)
