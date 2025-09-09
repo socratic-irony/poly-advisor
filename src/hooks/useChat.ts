@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import { Message } from '../types';
 import { parseEmlFile, readFileAsText } from '../utils/emlParser';
 import { stripHtml } from '../utils/stripHtml';
+import { loadAdvisingDocument, formatAdvisingDocumentForPrompt } from '../utils/advisingDocument';
 
 // Helper functions
 const isEmailThread = (text: string): boolean => {
@@ -64,6 +65,68 @@ export function useChat(
     return searchDepth === 'high'
       ? "Use a high-depth web search within *.calpoly.edu (cast a wider net, review more authoritative pages)."
       : "Use a medium-depth web search within *.calpoly.edu.";
+  };
+
+  // Shared prompt configurations
+  const getBaseSystemPrompt = async (): Promise<string> => {
+    const advisingDoc = await loadAdvisingDocument();
+    const formattedAdvisingDoc = formatAdvisingDocumentForPrompt(advisingDoc);
+    
+    return "You are playing the role of a student advisor for a university. " +
+      "The university is Cal Poly, San Luis Obispo. ASSUME ALL QUESTIONS PERTAIN TO CAL POLY, SAN LUIS OBISPO unless otherwise noted. " +
+      "First, check the attached advising document which contains authoritative information about the Philosophy department. " +
+      "Search only within calpoly.edu and provide information only that comes from calpoly.edu unless explicitly asked otherwise. " +
+      getSystemDepthText() + " " +
+      "Prefer the most recent official policy, catalog, Registrar, and advising pages. " +
+      "Give clear step-by-step instructions when forms/approvals are involved. " +
+      "If the exact year is unclear, cite the most recent year you can find and label it; " +
+      "if the specific year is not available, link the closest official source. " +
+      "Always include inline citations and links with URLs. " +
+      "However, DO NOT include a list e.g. of `**Sources**` at the end -- these are included in the JSON response. " +
+      "Use absolute dates (e.g., July 28, 2025). Ask a brief clarifying question if necessary." +
+      formattedAdvisingDoc;
+  };
+
+  const getBaseDeveloperPrompt = (): string => {
+    return "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. Do not sign responses or add any signature. " +
+      "Always produce inline citations and a Sources list with titles and URLs. Links must open in a new tab.";
+  };
+
+  const getEmailThreadUserPrompt = (content: string): string => {
+    return "The following is an email thread. Infer roles (advisor = RJ, Philosophy; student = the other party). " +
+      "Draft a concise reply with cited Cal Poly URLs. Do not include any signature or sign-off.\n\n" +
+      "Email thread:\n\n" + content;
+  };
+
+  const createSystemContent = async (includeTimestampNote = false): Promise<Array<{ type: "input_text"; text: string }>> => {
+    let systemText = await getBaseSystemPrompt();
+    if (includeTimestampNote) {
+      systemText = systemText.replace(
+        "State the date when policies were last updated, if available. ",
+        ""
+      );
+    } else {
+      systemText = systemText.replace(
+        "Prefer the most recent official policy, catalog, Registrar, and advising pages. ",
+        "Prefer the most recent official policy, catalog, Registrar, and advising pages. State the date when policies were last updated, if available. "
+      );
+    }
+    return [{ type: "input_text" as const, text: systemText }];
+  };
+
+  const createDeveloperContent = (chatMode = false): Array<{ type: "input_text"; text: string }> => {
+    let devText = getBaseDeveloperPrompt();
+    if (chatMode) {
+      devText = devText.replace(
+        "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. Do not sign responses or add any signature. " +
+        "Always produce inline citations and a Sources list with titles and URLs. Links must open in a new tab.",
+        "Identity: You are fielding a question sent to the email address ryjenkin. " +
+        "Assume the student's major is PHIL unless otherwise stated. Do not sign responses or add any signature. " +
+        "Always produce inline citations. Do not include a list of Sources or References. " +
+        "Links must open in a new tab."
+      );
+    }
+    return [{ type: "input_text" as const, text: devText }];
   };
 
   const fetchSuggestions = async (question: string, answer: string): Promise<string[]> => {
@@ -130,40 +193,14 @@ export function useChat(
           ? ({ type: "web_search" as const } as any)
           : ("auto" as const);
 
-      const systemContent = [
-        { type: "input_text" as const, text:
-          "You are playing the role of a student advisor for a university. " +
-          "The university is Cal Poly, San Luis Obispo. ASSUME ALL QUESTIONS PERTAIN TO CAL POLY, SAN LUIS OBISPO unless otherwise noted. " +
-          "First, check the advising document 2025-2026_PHIL_Advising_doc.md in the src folder in case it's helpful for the query. " +
-          "Search only within calpoly.edu and provide information only that comes from calpoly.edu unless explicitly asked otherwise. " +
-          getSystemDepthText() + " " +
-          "Prefer the most recent official policy, catalog, Registrar, and advising pages. State the date when policies were last updated, if available. " +
-          "If the exact year is unclear, cite the most recent year you can find and label it; " +
-          "if the specific year is not available, link the closest official source. " +
-          "Use absolute dates (e.g., July 28, 2025). " +
-          "Ask a brief clarifying question if necessary."
-          "Give clear step-by-step instructions when forms/approvals are involved. " +
-          "Always include inline citations and links with URLs. " +
-          "However, DO NOT include a list e.g. of `**Sources**` at the end -- these are included in the JSON response. " +
-        }
-      ];
+      const systemContent = await createSystemContent(true);
 
       let userContent = query;
       if (isEmailThread(query)) {
-        userContent =
-          "The following is an email thread. Infer roles (advisor = RJ, Philosophy; student = the other party). " +
-          "Draft a concise reply with cited Cal Poly URLs. Do not include any signature or sign-off.\n\n" +
-          "Email thread:\n\n" + query;
+        userContent = getEmailThreadUserPrompt(query);
       }
 
-      const devContent = [
-        { type: "input_text" as const, text:
-          "Identity: You are fielding a question sent to the email address ryjenkin. " +
-          "Assume the student's major is PHIL unless otherwise stated. Do not sign responses or add any signature. " +
-          "Always produce inline citations. Do not include a list of Sources or References. " 
-          + "Links must open in a new tab."
-        }
-      ];
+      const devContent = createDeveloperContent(true);
 
       const response = await client.responses.create({
         model,
@@ -340,34 +377,11 @@ export function useChat(
           ? ({ type: "web_search" as const } as any)
           : ("auto" as const);
 
-      const systemContent = [
-        { type: "input_text" as const, text:
-          "You are playing the role of a student advisor for a university. " +
-          "The university is Cal Poly, San Luis Obispo. ASSUME ALL QUESTIONS PERTAIN TO CAL POLY, SAN LUIS OBISPO unless otherwise noted. " +
-          "First, check the advising document 2025-2026_PHIL_Advising_doc.md in the src folder in case it's helpful for the query. " +
-          "Search only within calpoly.edu and provide information only that comes from calpoly.edu unless explicitly asked otherwise. " +
-          getSystemDepthText() + " " +
-          "Prefer the most recent official policy, catalog, Registrar, and advising pages. " +
-          "Give clear step-by-step instructions when forms/approvals are involved. " +
-          "If the exact year is unclear, cite the most recent year you can find and label it; " +
-          "if the specific year is not available, link the closest official source. " +
-          "Always include inline citations and links with URLs. " +
-          "However, DO NOT include a list e.g. of `**Sources**` at the end -- these are included in the JSON response. " +
-          "Use absolute dates (e.g., July 28, 2025). Ask a brief clarifying question if necessary."
-        }
-      ];
+      const systemContent = await createSystemContent(false);
 
-      const userContent =
-        "The following is an email thread. Infer roles (advisor = RJ, Philosophy; student = the other party). " +
-        "Draft a concise reply with cited Cal Poly URLs. Do not include any signature or sign-off.\n\n" +
-        "Email thread:\n\n" + content;
+      const userContent = getEmailThreadUserPrompt(content);
 
-      const devContent = [
-        { type: "input_text" as const, text:
-          "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. Do not sign responses or add any signature. " +
-          "Always produce inline citations and a Sources list with titles and URLs. Links must open in a new tab."
-        }
-      ];
+      const devContent = createDeveloperContent(false);
 
       const response = await client.responses.create({
         model,
