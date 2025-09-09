@@ -11,9 +11,10 @@ interface MessageProps {
   onCopy: (index: number, content: string) => void;
   onRegenerate: () => void;
   onExport: (content: string) => void;
+  onSuggestionClick?: (suggestion: string) => void;
 }
 
-export default function Message({ message, index, isStreaming, copiedMessageIndex, onCopy, onRegenerate, onExport }: MessageProps) {
+export default function Message({ message, index, isStreaming, copiedMessageIndex, onCopy, onRegenerate, onExport, onSuggestionClick }: MessageProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const words = message.content.trim().split(/\s+/);
@@ -169,21 +170,23 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
       )}
 
       {message.suggestions && message.suggestions.length > 0 && (
-        <div className="ml-8 sm:ml-11 mt-3 sm:mt-4 flex flex-wrap gap-2">
+        <div className="ml-8 sm:ml-11 mt-4 sm:mt-5 flex flex-wrap gap-3">
           {message.suggestions.map((suggestion: string, idx: number) => {
             const colorClasses = [
-              'bg-green-50 text-green-700 border-green-200',
-              'bg-amber-50 text-amber-700 border-amber-200',
-              'bg-blue-50 text-blue-700 border-blue-200',
+              'bg-green-50 text-green-700 border-green-200 hover:bg-green-100',
+              'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100',
+              'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100',
             ];
             const classes = colorClasses[idx % colorClasses.length];
             return (
-              <div
+              <button
                 key={idx}
-                className={`px-3 py-1 rounded-full border text-xs sm:text-sm ${classes}`}
+                onClick={() => onSuggestionClick?.(suggestion)}
+                className={`px-4 py-2 rounded-lg border text-sm sm:text-base ${classes} transition-all duration-200 hover:shadow-sm active:transform active:scale-95 flex items-center gap-2 group`}
               >
-                {suggestion}
-              </div>
+                <span>{suggestion}</span>
+                <span className="text-xs opacity-60 group-hover:opacity-80">Ask →</span>
+              </button>
             );
           })}
         </div>

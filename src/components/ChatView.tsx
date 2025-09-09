@@ -14,6 +14,7 @@ interface ChatViewProps {
   onExport: (content: string) => void;
   onFileInstantReply: (file: File) => void;
   onFileComment: (file: File) => void;
+  onSuggestionClick?: (suggestion: string) => void;
 }
 
 export default function ChatView({ 
@@ -26,7 +27,8 @@ export default function ChatView({
   onRegenerate, 
   onExport,
   onFileInstantReply,
-  onFileComment 
+  onFileComment,
+  onSuggestionClick
 }: ChatViewProps) {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -196,6 +198,7 @@ export default function ChatView({
               onCopy={onCopy}
               onRegenerate={onRegenerate}
               onExport={onExport}
+              onSuggestionClick={onSuggestionClick}
             />
           ))}
         </div>
