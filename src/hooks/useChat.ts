@@ -172,8 +172,8 @@ export function useChat(
     }
   };
 
-  const ask = async () => {
-    const query = input.trim();
+  const ask = async (providedQuery?: string) => {
+    const query = (providedQuery || input).trim();
     if (!query || isLoading) return;
 
     try {
