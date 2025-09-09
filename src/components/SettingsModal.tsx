@@ -1,4 +1,4 @@
-import { X } from './icons';
+import { X } from 'lucide-react';
 import Settings from './Settings';
 
 interface SettingsModalProps {

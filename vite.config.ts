@@ -19,6 +19,8 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           // OpenAI is large, keep it separate for better caching
           openai: ['openai'],
+          // UI libraries that are stable
+          ui: ['lucide-react', 'markdown-to-jsx'],
         },
       },
     },

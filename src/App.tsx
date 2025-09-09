@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings } from './components/icons';
+import { Settings } from 'lucide-react';
 import { useSettings } from './hooks/useSettings';
 import { useChat } from './hooks/useChat';
 import SettingsModal from './components/SettingsModal';

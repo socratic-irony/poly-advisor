@@ -1,4 +1,4 @@
-import { Settings } from './icons';
+import { Settings } from 'lucide-react';
 
 interface TopMenuBarProps {
   onSettingsClick: () => void;

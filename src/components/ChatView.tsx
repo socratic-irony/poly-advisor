@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Message as MessageType } from '../types';
-import { Mail, FileText } from './icons';
+import { Mail, FileText } from 'lucide-react';
 import Message from './Message';
 
 interface ChatViewProps {
