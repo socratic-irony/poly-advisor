@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import { Message } from '../types';
 import { parseEmlFile, readFileAsText } from '../utils/emlParser';
 import { stripHtml } from '../utils/stripHtml';
+import { loadAdvisingDocument, formatAdvisingDocumentForPrompt } from '../utils/advisingDocument';
 
 // Helper functions
 const isEmailThread = (text: string): boolean => {
@@ -67,10 +68,13 @@ export function useChat(
   };
 
   // Shared prompt configurations
-  const getBaseSystemPrompt = (): string => {
+  const getBaseSystemPrompt = async (): Promise<string> => {
+    const advisingDoc = await loadAdvisingDocument();
+    const formattedAdvisingDoc = formatAdvisingDocumentForPrompt(advisingDoc);
+    
     return "You are playing the role of a student advisor for a university. " +
       "The university is Cal Poly, San Luis Obispo. ASSUME ALL QUESTIONS PERTAIN TO CAL POLY, SAN LUIS OBISPO unless otherwise noted. " +
-      "First, check the advising document 2025-2026_PHIL_Advising_doc.md in the src folder in case it's helpful for the query. " +
+      "First, check the attached advising document which contains authoritative information about the Philosophy department. " +
       "Search only within calpoly.edu and provide information only that comes from calpoly.edu unless explicitly asked otherwise. " +
       getSystemDepthText() + " " +
       "Prefer the most recent official policy, catalog, Registrar, and advising pages. " +
@@ -79,7 +83,8 @@ export function useChat(
       "if the specific year is not available, link the closest official source. " +
       "Always include inline citations and links with URLs. " +
       "However, DO NOT include a list e.g. of `**Sources**` at the end -- these are included in the JSON response. " +
-      "Use absolute dates (e.g., July 28, 2025). Ask a brief clarifying question if necessary.";
+      "Use absolute dates (e.g., July 28, 2025). Ask a brief clarifying question if necessary." +
+      formattedAdvisingDoc;
   };
 
   const getBaseDeveloperPrompt = (): string => {
@@ -93,8 +98,8 @@ export function useChat(
       "Email thread:\n\n" + content;
   };
 
-  const createSystemContent = (includeTimestampNote = false): Array<{ type: "input_text"; text: string }> => {
-    let systemText = getBaseSystemPrompt();
+  const createSystemContent = async (includeTimestampNote = false): Promise<Array<{ type: "input_text"; text: string }>> => {
+    let systemText = await getBaseSystemPrompt();
     if (includeTimestampNote) {
       systemText = systemText.replace(
         "State the date when policies were last updated, if available. ",
@@ -188,7 +193,7 @@ export function useChat(
           ? ({ type: "web_search" as const } as any)
           : ("auto" as const);
 
-      const systemContent = createSystemContent(true);
+      const systemContent = await createSystemContent(true);
 
       let userContent = query;
       if (isEmailThread(query)) {
@@ -372,7 +377,7 @@ export function useChat(
           ? ({ type: "web_search" as const } as any)
           : ("auto" as const);
 
-      const systemContent = createSystemContent(false);
+      const systemContent = await createSystemContent(false);
 
       const userContent = getEmailThreadUserPrompt(content);
 
