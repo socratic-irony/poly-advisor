@@ -1,10 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 const ReactMarkdown = lazy(() => import('react-markdown'));
-const CopyIcon = lazy(() => import('lucide-react').then(m => ({ default: m.Copy })));
-const CheckIcon = lazy(() => import('lucide-react').then(m => ({ default: m.Check })));
-const RotateCwIcon = lazy(() => import('lucide-react').then(m => ({ default: m.RotateCw })));
-const DownloadIcon = lazy(() => import('lucide-react').then(m => ({ default: m.Download })));
-const MailIcon = lazy(() => import('lucide-react').then(m => ({ default: m.Mail })));
+import { Copy, Check, RotateCw, Download, Mail } from './icons';
 import { Message as MessageType } from '../types';
 
 interface MessageProps {
@@ -46,9 +42,7 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
         {message.attachment ? (
           <div className="mb-3 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
-              <Suspense fallback={null}>
-                <MailIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
-              </Suspense>
+              <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
               <span className="text-gray-800 font-medium text-xs sm:text-sm">Email Attachment</span>
               {message.attachment.fileName && (
                 <span className="ml-auto text-gray-600 text-xs truncate">{message.attachment.fileName}</span>
@@ -121,17 +115,13 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
           >
             {copiedMessageIndex === index ? (
               <>
-                  <Suspense fallback={null}>
-                    <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
-                  </Suspense>
+                <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
                 <span className="hidden sm:inline">Copied!</span>
                 <span className="sm:hidden">✓</span>
               </>
             ) : (
               <>
-                  <Suspense fallback={null}>
-                    <CopyIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </Suspense>
+                <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Copy</span>
               </>
             )}
@@ -140,18 +130,14 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
             onClick={onRegenerate}
             className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-md transition-colors"
           >
-              <Suspense fallback={null}>
-                <RotateCwIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-              </Suspense>
+            <RotateCw className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Regenerate</span>
           </button>
           <button
             onClick={() => onExport(message.content)}
             className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-md transition-colors"
           >
-              <Suspense fallback={null}>
-                <DownloadIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-              </Suspense>
+            <Download className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Export</span>
           </button>
         </div>
