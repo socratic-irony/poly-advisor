@@ -141,10 +141,10 @@ export function useChat(
           "If the exact year is unclear, cite the most recent year you can find and label it; " +
           "if the specific year is not available, link the closest official source. " +
           "Use absolute dates (e.g., July 28, 2025). " +
-          "Ask a brief clarifying question if necessary."
+          "Ask a brief clarifying question if necessary." +
           "Give clear step-by-step instructions when forms/approvals are involved. " +
           "Always include inline citations and links with URLs. " +
-          "However, DO NOT include a list e.g. of `**Sources**` at the end -- these are included in the JSON response. " +
+          "However, DO NOT include a list e.g. of `**Sources**` at the end -- these are included in the JSON response."
         }
       ];
 
