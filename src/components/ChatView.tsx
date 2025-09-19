@@ -10,7 +10,7 @@ interface ChatViewProps {
   chatRef: React.RefObject<HTMLDivElement>;
   copiedMessageIndex: number | null;
   onCopy: (index: number, content: string) => void;
-  onRegenerate: () => void;
+  onRegenerate: () => void | Promise<void>;
   onExport: (content: string) => void;
   onFileInstantReply: (file: File) => void;
   onFileComment: (file: File) => void;

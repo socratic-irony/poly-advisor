@@ -9,13 +9,15 @@ interface SettingsProps {
   onForceSearchChange: (value: boolean) => void;
   model: string;
   onModelChange: (value: string) => void;
+  storageError: string | null;
 }
 
 export default function SettingsComponent({
   apiKey, onApiKeyChange, onSaveKey, onForgetKey,
   searchDepth, onSearchDepthChange,
   forceSearch, onForceSearchChange,
-  model, onModelChange
+  model, onModelChange,
+  storageError
 }: SettingsProps) {
   return (
     <div className="space-y-4">
@@ -44,7 +46,22 @@ export default function SettingsComponent({
               </button>
             </div>
           </div>
-      
+
+          {storageError && (
+            <div className="flex items-start gap-2 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+              <svg
+                className="w-4 h-4 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12.25a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z" />
+              </svg>
+              <span>{storageError}</span>
+            </div>
+          )}
+
           {/* Settings Row */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 items-start sm:items-center text-sm">
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">

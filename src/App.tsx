@@ -19,6 +19,7 @@ export default function App() {
     setForceSearch,
     saveKey,
     forgetKey,
+    storageError,
   } = useSettings();
 
   const {
@@ -29,7 +30,7 @@ export default function App() {
     chatRef,
     setInput,
     ask,
-    clearScreen,
+    newChat,
     handleRegenerate,
     processFileForInstantReply,
     processFileForComment,
@@ -118,7 +119,7 @@ export default function App() {
           isLoading={isLoading}
           onInputChange={setInput}
           onAsk={ask}
-          onClearScreen={clearScreen}
+          onNewChat={newChat}
           onKeyDown={handleKeyDown}
         />
       </div>
@@ -137,6 +138,7 @@ export default function App() {
         onForceSearchChange={setForceSearch}
         model={model}
         onModelChange={setModel}
+        storageError={storageError}
       />
     </div>
   );

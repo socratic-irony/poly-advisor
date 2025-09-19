@@ -5,23 +5,48 @@ export function useSettings() {
   const [model, setModel] = useState<string>('gpt-4.1');
   const [searchDepth, setSearchDepth] = useState<'medium' | 'high'>('medium');
   const [forceSearch, setForceSearch] = useState<boolean>(true);
+  const [storageError, setStorageError] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedKey = localStorage.getItem('openai_key');
-    if (savedKey) {
-      setApiKey(savedKey);
+    try {
+      const savedKey = window.localStorage?.getItem('openai_key');
+      if (savedKey) {
+        setApiKey(savedKey);
+      }
+      setStorageError(null);
+    } catch (error) {
+      console.error('Unable to access localStorage', error);
+      setStorageError(
+        'Browser storage is unavailable. Your API key will only be kept for this session.'
+      );
     }
   }, []);
 
   const saveKey = () => {
     const trimmedKey = apiKey.trim();
-    localStorage.setItem('openai_key', trimmedKey);
     setApiKey(trimmedKey);
+
+    try {
+      window.localStorage?.setItem('openai_key', trimmedKey);
+      setStorageError(null);
+    } catch (error) {
+      console.error('Unable to save key to localStorage', error);
+      setStorageError(
+        'We could not save your API key to browser storage. It will reset when you close this tab.'
+      );
+    }
   };
 
   const forgetKey = () => {
-    localStorage.removeItem('openai_key');
     setApiKey('');
+
+    try {
+      window.localStorage?.removeItem('openai_key');
+      setStorageError(null);
+    } catch (error) {
+      console.error('Unable to remove key from localStorage', error);
+      setStorageError('We could not remove the stored API key.');
+    }
   };
 
   return {
@@ -35,5 +60,6 @@ export function useSettings() {
     setForceSearch,
     saveKey,
     forgetKey,
+    storageError,
   };
 }

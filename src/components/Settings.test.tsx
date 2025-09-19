@@ -14,6 +14,7 @@ describe('SettingsComponent', () => {
     onForceSearchChange: vi.fn(),
     model: 'gpt-4.1',
     onModelChange: vi.fn(),
+    storageError: null as string | null,
   };
 
   it('renders the settings form', () => {

@@ -8,7 +8,7 @@ describe('InputForm', () => {
     isLoading: false,
     onInputChange: vi.fn(),
     onAsk: vi.fn(),
-    onClearScreen: vi.fn(),
+    onNewChat: vi.fn(),
     onKeyDown: vi.fn(),
   };
 
@@ -43,11 +43,11 @@ describe('InputForm', () => {
     expect(defaultProps.onAsk).toHaveBeenCalled();
   });
 
-  it('calls onClearScreen when clear screen button is clicked', () => {
+  it('calls onNewChat when the button is clicked', () => {
     render(<InputForm {...defaultProps} />);
-    const clearScreenButton = screen.getByText('Clear Screen');
-    fireEvent.click(clearScreenButton);
-    expect(defaultProps.onClearScreen).toHaveBeenCalled();
+    const newChatButton = screen.getByText('New Chat');
+    fireEvent.click(newChatButton);
+    expect(defaultProps.onNewChat).toHaveBeenCalled();
   });
 
   it('calls onKeyDown when a key is pressed in the textarea', () => {

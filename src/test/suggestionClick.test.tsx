@@ -15,6 +15,7 @@ vi.mock('../hooks/useSettings', () => ({
     setForceSearch: vi.fn(),
     saveKey: vi.fn(),
     forgetKey: vi.fn(),
+    storageError: null,
   })
 }));
 
@@ -37,7 +38,7 @@ vi.mock('../hooks/useChat', () => ({
     chatRef: { current: null },
     setInput: mockSetInput,
     ask: mockAsk,
-    clearScreen: vi.fn(),
+    newChat: vi.fn(),
     handleRegenerate: vi.fn(),
     processFileForInstantReply: vi.fn(),
     processFileForComment: vi.fn(),

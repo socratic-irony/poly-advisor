@@ -7,7 +7,6 @@ import { loadAdvisingDocument, formatAdvisingDocumentForPrompt } from '../utils/
 // @ts-ignore: openai-responses.js is a plain JS helper outside the TS root
 import { ALLOWED_DOMAINS } from '../../openai-responses.js';
 
-// Helper functions
 const isEmailThread = (text: string): boolean => {
   return /^(from|subject|date|to):/im.test(text) || /On .* wrote:/i.test(text);
 };
@@ -34,6 +33,39 @@ const cleanMarkdown = (text: string): string => {
     .trim();
 };
 
+const nextFrame = () =>
+  new Promise<void>((resolve) => {
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(() => resolve());
+    } else {
+      setTimeout(() => resolve(), 0);
+    }
+  });
+
+const extractUniqueSources = (annotations: any[]): Message['sources'] => {
+  if (!Array.isArray(annotations)) {
+    return undefined;
+  }
+
+  const unique = annotations.reduce((acc: NonNullable<Message['sources']>, annotation: any) => {
+    const url = annotation?.url;
+    if (!url) {
+      return acc;
+    }
+
+    if (!acc.some((source) => source.url === url)) {
+      acc.push({
+        title: annotation.title || url,
+        url,
+      });
+    }
+
+    return acc;
+  }, [] as NonNullable<Message['sources']>);
+
+  return unique.length > 0 ? unique : undefined;
+};
+
 export function useChat(
   model: string,
   searchDepth: 'medium' | 'high',
@@ -53,10 +85,21 @@ export function useChat(
   }, [messages]);
 
   const createClient = (): OpenAI => {
-    const savedKey = localStorage.getItem('openai_key');
-    if (!savedKey) {
-      throw new Error("Please add your OpenAI API key first.");
+    let savedKey: string | null = null;
+
+    try {
+      savedKey = window.localStorage?.getItem('openai_key') ?? null;
+    } catch (error) {
+      console.error('Unable to access localStorage', error);
+      throw new Error(
+        'Unable to access browser storage for your API key. Please allow storage access or paste your key again.'
+      );
     }
+
+    if (!savedKey) {
+      throw new Error('Please add your OpenAI API key first.');
+    }
+
     return new OpenAI({
       apiKey: savedKey,
       dangerouslyAllowBrowser: true,
@@ -69,11 +112,10 @@ export function useChat(
       : "Use a medium-depth web search within *.calpoly.edu.";
   };
 
-  // Shared prompt configurations
   const getBaseSystemPrompt = async (): Promise<string> => {
     const advisingDoc = await loadAdvisingDocument();
     const formattedAdvisingDoc = formatAdvisingDocumentForPrompt(advisingDoc);
-    
+
     return "You are playing the role of a student advisor for a university. " +
       "The university is Cal Poly, San Luis Obispo. ASSUME ALL QUESTIONS PERTAIN TO CAL POLY, SAN LUIS OBISPO unless otherwise noted. " +
       "First, check the attached advising document which contains authoritative information about the Philosophy department. " +
@@ -172,169 +214,201 @@ export function useChat(
     }
   };
 
+  const addAssistantPlaceholder = (userMessage?: Message): number => {
+    let assistantIndex = -1;
+    setMessages((prev) => {
+      const base = userMessage ? [...prev, userMessage] : [...prev];
+      assistantIndex = base.length;
+      return [...base, { role: 'assistant', content: '', sources: undefined }];
+    });
+    setStreamingMessageIndex(assistantIndex);
+    return assistantIndex;
+  };
+
+  const streamContentToMessage = async (
+    assistantMessageIndex: number,
+    text: string,
+    sources?: Message['sources']
+  ) => {
+    const totalLength = text.length;
+
+    if (totalLength === 0) {
+      setMessages((prev) =>
+        prev.map((msg, idx) =>
+          idx === assistantMessageIndex
+            ? { ...msg, content: text, sources: sources && sources.length > 0 ? sources : undefined }
+            : msg
+        )
+      );
+      return;
+    }
+
+    const updateCount = Math.min(10, Math.max(1, Math.ceil(totalLength / 200)));
+    const step = Math.ceil(totalLength / updateCount);
+
+    for (let i = 1; i <= updateCount; i++) {
+      const sliceIndex = Math.min(totalLength, i * step);
+      const partial = text.slice(0, sliceIndex);
+      const isLast = i === updateCount;
+
+      setMessages((prev) =>
+        prev.map((msg, idx) =>
+          idx === assistantMessageIndex
+            ? {
+                ...msg,
+                content: partial,
+                sources: isLast && sources && sources.length > 0 ? sources : msg.sources,
+              }
+            : msg
+        )
+      );
+
+      if (!isLast) {
+        await nextFrame();
+      }
+    }
+  };
+
+  const handleAssistantError = (assistantMessageIndex: number, error: unknown) => {
+    console.error('Error:', error);
+    const errorMessage: Message = {
+      role: 'assistant',
+      content: `Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
+    };
+
+    if (assistantMessageIndex >= 0) {
+      setMessages((prev) =>
+        prev.map((msg, idx) => (idx === assistantMessageIndex ? errorMessage : msg))
+      );
+    } else {
+      setMessages((prev) => [...prev, errorMessage]);
+    }
+
+    setStreamingMessageIndex(null);
+  };
+
+  const runAssistantFlow = async (options: {
+    assistantMessageIndex: number;
+    userContent: string;
+    suggestionsSeed: string;
+    includeTimestampNote: boolean;
+    developerChatMode: boolean;
+  }) => {
+    const { assistantMessageIndex, userContent, suggestionsSeed, includeTimestampNote, developerChatMode } = options;
+
+    const client = createClient();
+    const tool = { type: "web_search", filters: { allowed_domains: ALLOWED_DOMAINS } } as any;
+    const toolChoice =
+      forceSearch
+        ? ({ type: "web_search" as const } as any)
+        : ("auto" as const);
+
+    const systemContent = await createSystemContent(includeTimestampNote);
+    const devContent = createDeveloperContent(developerChatMode);
+
+    const response = await client.responses.create({
+      model,
+      input: [
+        { role: "system", content: systemContent },
+        { role: "developer", content: devContent },
+        { role: "user", content: [{ type: "input_text", text: userContent }] },
+      ],
+      tools: [tool],
+      tool_choice: toolChoice as any,
+      previous_response_id: previousResponseId || undefined,
+    });
+
+    setPreviousResponseId(response.id);
+
+    const messageItem = (response.output || []).find((o: any) => o.type === "message");
+    const textObj = (messageItem as any)?.content?.find((c: any) => c.type === 'output_text');
+    const text = textObj?.text || '';
+    const annotations = textObj?.annotations?.filter((a: any) => a.type === 'url_citation') || [];
+
+    const sources = extractUniqueSources(annotations);
+    const cleanedText = cleanMarkdown(text);
+
+    await streamContentToMessage(assistantMessageIndex, cleanedText, sources);
+
+    const suggestions = await fetchSuggestions(suggestionsSeed, cleanedText);
+    if (suggestions.length > 0) {
+      setMessages((prev) =>
+        prev.map((msg, idx) =>
+          idx === assistantMessageIndex ? { ...msg, suggestions } : msg
+        )
+      );
+    }
+  };
+
   const ask = async (providedQuery?: string) => {
-    const query = (providedQuery || input).trim();
+    const query = (providedQuery ?? input).trim();
     if (!query || isLoading) return;
 
+    setIsLoading(true);
+
+    const userMessage: Message = { role: 'user', content: query };
+    const assistantMessageIndex = addAssistantPlaceholder(userMessage);
+    setInput('');
+
     try {
-      setIsLoading(true);
-      const userMessage: Message = { role: 'user', content: query };
-      setMessages((prev) => [...prev, userMessage]);
-      setInput('');
+      const userContent = isEmailThread(query) ? getEmailThreadUserPrompt(query) : query;
 
-      // Add placeholder assistant message for streaming simulation
-      const assistantMessageIndex = messages.length + 1;
-      setStreamingMessageIndex(assistantMessageIndex);
-      const placeholderMessage: Message = { role: 'assistant', content: '', sources: undefined };
-      setMessages((prev) => [...prev, placeholderMessage]);
-
-      const client = createClient();
-      const tool = { type: "web_search", filters: { allowed_domains: ALLOWED_DOMAINS } } as any;
-      const toolChoice =
-        forceSearch
-          ? ({ type: "web_search" as const } as any)
-          : ("auto" as const);
-
-      const systemContent = await createSystemContent(true);
-
-      let userContent = query;
-      if (isEmailThread(query)) {
-        userContent = getEmailThreadUserPrompt(query);
-      }
-
-      const devContent = createDeveloperContent(true);
-
-      const response = await client.responses.create({
-        model,
-        input: [
-          { role: "system", content: systemContent },
-          { role: "developer", content: devContent },
-          { role: "user", content: [{ type: "input_text", text: userContent }] },
-        ],
-        // temperature: 0.5,
-        tools: [tool],
-        tool_choice: toolChoice as any,
-        previous_response_id: previousResponseId || undefined,
+      await runAssistantFlow({
+        assistantMessageIndex,
+        userContent,
+        suggestionsSeed: query,
+        includeTimestampNote: true,
+        developerChatMode: true,
       });
-
-      setPreviousResponseId(response.id);
-
-      const messageItem = (response.output || []).find((o: any) => o.type === "message");
-      if (messageItem) {
-        const textObj = (messageItem as any).content?.find((c: any) => c.type === 'output_text');
-        const text = textObj?.text || '';
-        const annotations = textObj?.annotations?.filter((a: any) => a.type === 'url_citation') || [];
-
-        const uniqueSources = annotations.reduce((acc: any[], annotation: any) => {
-          const url = annotation.url;
-          const existingSource = acc.find(source => source.url === url);
-          if (!existingSource) {
-            acc.push({
-              title: annotation.title || annotation.url,
-              url: annotation.url
-            });
-          }
-          return acc;
-        }, []);
-
-        // Simulate streaming by updating the message progressively
-        const cleanedText = cleanMarkdown(text);
-        const words = cleanedText.split(' ');
-        let currentContent = '';
-        
-        // Stream the text word by word for a better user experience
-        for (let i = 0; i < words.length; i++) {
-          currentContent += (i > 0 ? ' ' : '') + words[i];
-          
-          setMessages((prev) => 
-            prev.map((msg, idx) => 
-              idx === assistantMessageIndex
-                ? { 
-                    ...msg, 
-                    content: currentContent,
-                    sources: i === words.length - 1 && uniqueSources.length > 0 ? uniqueSources : undefined
-                  }
-                : msg
-            )
-          );
-          
-          // Add a small delay to simulate streaming
-          if (i < words.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 30));
-          }
-        }
-
-        const suggestions = await fetchSuggestions(query, cleanedText);
-        if (suggestions.length > 0) {
-          setMessages(prev =>
-            prev.map((msg, idx) =>
-              idx === assistantMessageIndex ? { ...msg, suggestions } : msg
-            )
-          );
-        }
-      }
     } catch (error) {
-      console.error('Error:', error);
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: `Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
-      };
-      
-      if (streamingMessageIndex !== null) {
-        setMessages((prev) => 
-          prev.map((msg, idx) => 
-            idx === streamingMessageIndex
-              ? errorMessage
-              : msg
-          )
-        );
-      } else {
-        setMessages(prev => [...prev, errorMessage]);
-      }
+      handleAssistantError(assistantMessageIndex, error);
     } finally {
       setIsLoading(false);
       setStreamingMessageIndex(null);
     }
   };
 
-  const newChat = () => {
-    setPreviousResponseId(null);
-    setStreamingMessageIndex(null);
-    const systemMessage: Message = { role: 'system', content: 'Started a new chat.' };
-    setMessages([systemMessage]);
-  };
+  const processEmailThread = async (content: string, fileName?: string) => {
+    let assistantMessageIndex = -1;
 
-  const clearScreen = () => {
-    setPreviousResponseId(null);
-    setStreamingMessageIndex(null);
-    setMessages([]);
-  };
+    try {
+      setIsLoading(true);
 
-  const handleRegenerate = () => {
-    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
-    if (lastUserMessage) {
-      setInput(lastUserMessage.content);
-      ask();
+      const userMessage: Message = {
+        role: 'user',
+        content,
+        ...(fileName
+          ? {
+              attachment: {
+                fileName,
+                type: 'eml' as const,
+              },
+            }
+          : {}),
+      };
+
+      assistantMessageIndex = addAssistantPlaceholder(userMessage);
+
+      await runAssistantFlow({
+        assistantMessageIndex,
+        userContent: getEmailThreadUserPrompt(content),
+        suggestionsSeed: content,
+        includeTimestampNote: false,
+        developerChatMode: false,
+      });
+    } catch (error) {
+      handleAssistantError(assistantMessageIndex, error);
+    } finally {
+      setIsLoading(false);
+      setStreamingMessageIndex(null);
     }
   };
 
   const processFileForInstantReply = async (file: File) => {
     try {
-      setIsLoading(true);
       const fileContent = await readFileAsText(file);
       const parsedContent = stripHtml(parseEmlFile(fileContent));
-      
-      const userMessage: Message = { 
-        role: 'user', 
-        content: parsedContent,
-        attachment: {
-          fileName: file.name,
-          type: 'eml'
-        }
-      };
-      setMessages((prev) => [...prev, userMessage]);
-      
-      // Process as email thread for instant reply
+
       await processEmailThread(parsedContent, file.name);
     } catch (error) {
       console.error('Error processing file:', error);
@@ -343,8 +417,8 @@ export function useChat(
         content: `Error processing file: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
       setIsLoading(false);
+      setStreamingMessageIndex(null);
     }
   };
 
@@ -352,8 +426,7 @@ export function useChat(
     try {
       const fileContent = await readFileAsText(file);
       const parsedContent = stripHtml(parseEmlFile(fileContent));
-      
-      // Set the input with the parsed content so user can add comments
+
       setInput(`[Email attached: ${file.name}]\n\n${parsedContent}\n\n--- Add your comments below ---\n`);
     } catch (error) {
       console.error('Error processing file:', error);
@@ -365,117 +438,18 @@ export function useChat(
     }
   };
 
-  const processEmailThread = async (content: string, fileName?: string) => {
-    try {
-      // Add placeholder assistant message for streaming simulation
-      const assistantMessageIndex = messages.length + (fileName ? 1 : 0);
-      setStreamingMessageIndex(assistantMessageIndex);
-      const placeholderMessage: Message = { role: 'assistant', content: '', sources: undefined };
-      setMessages((prev) => [...prev, placeholderMessage]);
+  const newChat = () => {
+    setPreviousResponseId(null);
+    setStreamingMessageIndex(null);
+    setMessages([]);
+    setInput('');
+  };
 
-      const client = createClient();
-      const tool = { type: "web_search", filters: { allowed_domains: ALLOWED_DOMAINS } } as any;
-      const toolChoice =
-        forceSearch
-          ? ({ type: "web_search" as const } as any)
-          : ("auto" as const);
-
-      const systemContent = await createSystemContent(false);
-
-      const userContent = getEmailThreadUserPrompt(content);
-
-      const devContent = createDeveloperContent(false);
-
-      const response = await client.responses.create({
-        model,
-        input: [
-          { role: "system", content: systemContent },
-          { role: "developer", content: devContent },
-          { role: "user", content: [{ type: "input_text", text: userContent }] },
-        ],
-        // temperature: 0.5,
-        tools: [tool],
-        tool_choice: toolChoice as any,
-        previous_response_id: previousResponseId || undefined,
-      });
-
-      setPreviousResponseId(response.id);
-
-      const messageItem = (response.output || []).find((o: any) => o.type === "message");
-      if (messageItem) {
-        const textObj = (messageItem as any).content?.find((c: any) => c.type === 'output_text');
-        const text = textObj?.text || '';
-        const annotations = textObj?.annotations?.filter((a: any) => a.type === 'url_citation') || [];
-
-        const uniqueSources = annotations.reduce((acc: any[], annotation: any) => {
-          const url = annotation.url;
-          const existingSource = acc.find(source => source.url === url);
-          if (!existingSource) {
-            acc.push({
-              title: annotation.title || annotation.url,
-              url: annotation.url
-            });
-          }
-          return acc;
-        }, []);
-
-        // Simulate streaming by updating the message progressively
-        const cleanedText = cleanMarkdown(text);
-        const words = cleanedText.split(' ');
-        let currentContent = '';
-        
-        // Stream the text word by word for a better user experience
-        for (let i = 0; i < words.length; i++) {
-          currentContent += (i > 0 ? ' ' : '') + words[i];
-          
-          setMessages((prev) => 
-            prev.map((msg, idx) => 
-              idx === assistantMessageIndex
-                ? { 
-                    ...msg, 
-                    content: currentContent,
-                    sources: i === words.length - 1 && uniqueSources.length > 0 ? uniqueSources : undefined
-                  }
-                : msg
-            )
-          );
-          
-          // Add a small delay to simulate streaming
-          if (i < words.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 30));
-          }
-        }
-
-        const suggestions = await fetchSuggestions(content, cleanedText);
-        if (suggestions.length > 0) {
-          setMessages(prev =>
-            prev.map((msg, idx) =>
-              idx === assistantMessageIndex ? { ...msg, suggestions } : msg
-            )
-          );
-        }
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: `Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
-      };
-      
-      if (streamingMessageIndex !== null) {
-        setMessages((prev) => 
-          prev.map((msg, idx) => 
-            idx === streamingMessageIndex
-              ? errorMessage
-              : msg
-          )
-        );
-      } else {
-        setMessages(prev => [...prev, errorMessage]);
-      }
-    } finally {
-      setIsLoading(false);
-      setStreamingMessageIndex(null);
+  const handleRegenerate = async () => {
+    const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user');
+    if (lastUserMessage) {
+      setInput(lastUserMessage.content);
+      await ask(lastUserMessage.content);
     }
   };
 
@@ -488,7 +462,6 @@ export function useChat(
     setInput,
     ask,
     newChat,
-    clearScreen,
     handleRegenerate,
     processFileForInstantReply,
     processFileForComment,

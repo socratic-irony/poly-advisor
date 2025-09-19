@@ -3,7 +3,7 @@ import ChatView from './ChatView';
 import { describe, it, expect, vi } from 'vitest';
 import { Message as MessageType } from '../types';
 
-describe.skip('ChatView', () => {
+describe('ChatView', () => {
   const messages: MessageType[] = [
     { role: 'user', content: 'Hello' },
     { role: 'assistant', content: 'Hi there!', sources: [{ title: 'source1', url: 'url1' }] },
