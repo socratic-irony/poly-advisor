@@ -46,6 +46,10 @@ export default function App() {
     }
   };
 
+  const handleAsk = () => {
+    ask(input);
+  };
+
   const exportToMarkdown = (content: string) => {
     const blob = new Blob([content], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
@@ -118,7 +122,7 @@ export default function App() {
           input={input}
           isLoading={isLoading}
           onInputChange={setInput}
-          onAsk={ask}
+          onAsk={handleAsk}
           onNewChat={newChat}
           onKeyDown={handleKeyDown}
         />
