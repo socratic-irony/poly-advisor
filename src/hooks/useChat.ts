@@ -66,6 +66,76 @@ const extractUniqueSources = (annotations: any[]): Message['sources'] => {
   return unique.length > 0 ? unique : undefined;
 };
 
+const collectTextAndAnnotations = (content: any): { text: string; annotations: any[] } => {
+  const texts: string[] = [];
+  const annotations: any[] = [];
+
+  const visit = (node: any) => {
+    if (!node) {
+      return;
+    }
+
+    if (typeof node === 'string') {
+      const trimmed = node.trim();
+      if (trimmed) {
+        texts.push(trimmed);
+      }
+      return;
+    }
+
+    if (typeof node.text === 'string') {
+      const trimmed = node.text.trim();
+      if (trimmed) {
+        texts.push(trimmed);
+      }
+      if (Array.isArray(node.annotations)) {
+        annotations.push(...node.annotations);
+      }
+    }
+
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+    }
+
+    const childContent = (node as any).content;
+    if (Array.isArray(childContent)) {
+      childContent.forEach(visit);
+    } else if (childContent) {
+      visit(childContent);
+    }
+  };
+
+  visit(content);
+
+  return {
+    text: texts.join('\n').trim(),
+    annotations,
+  };
+};
+
+const extractResponseText = (response: any): { text: string; annotations: any[] } => {
+  const outputs = Array.isArray(response?.output) ? response.output : [];
+
+  for (const item of outputs) {
+    const { text, annotations } = collectTextAndAnnotations(item);
+    if (text) {
+      return { text, annotations };
+    }
+  }
+
+  const aggregated = collectTextAndAnnotations(response?.output_text);
+  if (aggregated.text) {
+    return aggregated;
+  }
+
+  const fallback = collectTextAndAnnotations(response?.response?.output_text);
+  if (fallback.text) {
+    return fallback;
+  }
+
+  return { text: '', annotations: [] };
+};
+
 export function useChat(
   model: string,
   searchDepth: 'medium' | 'high',
@@ -200,9 +270,8 @@ export function useChat(
         ]
       });
 
-      const messageItem = (response.output || []).find((o: any) => o.type === "message");
-      const textObj = (messageItem as any)?.content?.find((c: any) => c.type === 'output_text');
-      const text = textObj?.text || '';
+      const { text } = extractResponseText(response);
+
       return text
         .split('\n')
         .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
@@ -215,10 +284,9 @@ export function useChat(
   };
 
   const addAssistantPlaceholder = (userMessage?: Message): number => {
-    let assistantIndex = -1;
+    const assistantIndex = messages.length + (userMessage ? 1 : 0);
     setMessages((prev) => {
       const base = userMessage ? [...prev, userMessage] : [...prev];
-      assistantIndex = base.length;
       return [...base, { role: 'assistant', content: '', sources: undefined }];
     });
     setStreamingMessageIndex(assistantIndex);
@@ -320,24 +388,30 @@ export function useChat(
 
     setPreviousResponseId(response.id);
 
-    const messageItem = (response.output || []).find((o: any) => o.type === "message");
-    const textObj = (messageItem as any)?.content?.find((c: any) => c.type === 'output_text');
-    const text = textObj?.text || '';
-    const annotations = textObj?.annotations?.filter((a: any) => a.type === 'url_citation') || [];
-
-    const sources = extractUniqueSources(annotations);
+    const { text, annotations } = extractResponseText(response);
+    const sources = extractUniqueSources(
+      Array.isArray(annotations)
+        ? annotations.filter((a: any) => a?.type === 'url_citation')
+        : []
+    );
     const cleanedText = cleanMarkdown(text);
 
     await streamContentToMessage(assistantMessageIndex, cleanedText, sources);
 
     const suggestions = await fetchSuggestions(suggestionsSeed, cleanedText);
-    if (suggestions.length > 0) {
-      setMessages((prev) =>
-        prev.map((msg, idx) =>
-          idx === assistantMessageIndex ? { ...msg, suggestions } : msg
-        )
-      );
-    }
+    setMessages((prev) =>
+      prev.map((msg, idx) =>
+        idx === assistantMessageIndex
+          ? {
+              ...msg,
+              content: cleanedText,
+              sources: sources ?? msg.sources,
+              ...(suggestions.length > 0 ? { suggestions } : {}),
+            }
+          : msg
+      )
+    );
+    
   };
 
   const ask = async (providedQuery?: string) => {

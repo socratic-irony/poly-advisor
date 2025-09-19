@@ -1,6 +1,8 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useChat } from './useChat';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const mockResponsesCreate = vi.fn();
 
 // Mock localStorage
 const localStorageMock = {
@@ -18,21 +20,7 @@ vi.mock('openai', () => {
   return {
     default: class MockOpenAI {
       responses = {
-        create: vi.fn().mockResolvedValue({
-          id: 'mock-response-id',
-          output: [
-            {
-              type: 'message',
-              content: [
-                {
-                  type: 'output_text',
-                  text: 'Mock response',
-                  annotations: []
-                }
-              ]
-            }
-          ]
-        })
+        create: mockResponsesCreate,
       };
     }
   };
@@ -45,8 +33,26 @@ vi.mock('../utils/advisingDocument', () => ({
 }));
 
 describe('useChat', () => {
+  const defaultResponse = {
+    id: 'mock-response-id',
+    output: [
+      {
+        type: 'message',
+        content: [
+          {
+            type: 'output_text',
+            text: 'Mock response',
+            annotations: [],
+          },
+        ],
+      },
+    ],
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
+    mockResponsesCreate.mockReset();
+    mockResponsesCreate.mockResolvedValue(defaultResponse);
     localStorageMock.getItem.mockReturnValue('mock-api-key');
   });
 
@@ -166,5 +172,61 @@ describe('useChat', () => {
     expect(result.current.messages.length).toBe(messagesAfterFirstAsk + 2);
     const lastUserMessage = [...result.current.messages].reverse().find((m) => m.role === 'user');
     expect(lastUserMessage?.content).toBe('Original question');
+  });
+
+  it('renders assistant replies when the Responses API returns output_text items', async () => {
+    mockResponsesCreate.mockReset();
+    mockResponsesCreate
+      .mockResolvedValueOnce({
+        id: 'mock-response-id',
+        output: [
+          {
+            type: 'output_text',
+            text: 'Mock output text',
+            annotations: [
+              {
+                type: 'url_citation',
+                url: 'https://advising.calpoly.edu/example',
+                title: 'Example Source',
+              },
+            ],
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        id: 'mock-suggestions',
+        output: [
+          {
+            type: 'output_text',
+            text: '1. Follow up?\n2. Another question?',
+          },
+        ],
+      })
+      .mockResolvedValue(defaultResponse);
+
+    const { result } = renderHook(() => useChat('gpt-4o', 'medium', false));
+
+    act(() => {
+      result.current.setInput('Test output text handling');
+    });
+
+    await act(async () => {
+      await result.current.ask();
+    });
+
+    await waitFor(() => {
+      const assistantMessage = result.current.messages.find((m) => m.role === 'assistant');
+      expect(assistantMessage?.content).toBe('Mock output text');
+      expect(assistantMessage?.sources).toEqual([
+        {
+          title: 'Example Source',
+          url: 'https://advising.calpoly.edu/example',
+        },
+      ]);
+      expect(assistantMessage?.suggestions).toEqual([
+        'Follow up?',
+        'Another question?',
+      ]);
+    });
   });
 });
