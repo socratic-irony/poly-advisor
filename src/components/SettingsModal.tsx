@@ -14,6 +14,7 @@ interface SettingsModalProps {
   onForceSearchChange: (value: boolean) => void;
   model: string;
   onModelChange: (value: string) => void;
+  storageError: string | null;
 }
 
 export default function SettingsModal({
@@ -29,6 +30,7 @@ export default function SettingsModal({
   onForceSearchChange,
   model,
   onModelChange,
+  storageError,
 }: SettingsModalProps) {
   if (!isOpen) return null;
 
@@ -73,6 +75,7 @@ export default function SettingsModal({
             onForceSearchChange={onForceSearchChange}
             model={model}
             onModelChange={onModelChange}
+            storageError={storageError}
           />
         </div>
       </div>

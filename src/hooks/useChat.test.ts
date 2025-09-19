@@ -50,7 +50,7 @@ describe('useChat', () => {
     localStorageMock.getItem.mockReturnValue('mock-api-key');
   });
 
-  it('should reset previousResponseId when clearScreen is called', async () => {
+  it('should reset conversation context when newChat is called', async () => {
     const { result } = renderHook(() => useChat('gpt-4o', 'medium', false));
 
     // First, simulate setting input and asking a question to establish a previousResponseId
@@ -66,16 +66,16 @@ describe('useChat', () => {
     // Verify that messages were added (user message + placeholder for assistant)
     expect(result.current.messages.length).toBeGreaterThan(0);
 
-    // Clear the screen
+    // Start a new chat
     act(() => {
-      result.current.clearScreen();
+      result.current.newChat();
     });
 
     // Verify that messages were cleared
     expect(result.current.messages).toEqual([]);
 
     // Now ask another question and verify that previousResponseId is not passed
-    // This is verified by checking that the conversation doesn't have context from before clearScreen
+    // This is verified by checking that the conversation doesn't have context from before newChat
     act(() => {
       result.current.setInput('What were we talking about?');
     });
@@ -89,7 +89,7 @@ describe('useChat', () => {
     expect(result.current.messages.length).toBe(2); // User message + assistant response
   });
 
-  it('should clear all messages when clearScreen is called', () => {
+  it('should clear all messages and input when newChat is called', () => {
     const { result } = renderHook(() => useChat('gpt-4o', 'medium', false));
 
     // Add some messages first
@@ -100,17 +100,17 @@ describe('useChat', () => {
     // Simulate that we have some messages
     expect(result.current.input).toBe('Test message');
 
-    // Clear the screen
+    // Start a new chat
     act(() => {
-      result.current.clearScreen();
+      result.current.newChat();
     });
 
-    // Verify that messages were cleared but input should remain
+    // Verify that messages were cleared and input was reset
     expect(result.current.messages).toEqual([]);
-    expect(result.current.input).toBe('Test message'); // Input should not be affected
+    expect(result.current.input).toBe('');
   });
 
-  it('should start fresh conversation after clearScreen', async () => {
+  it('should start fresh conversation after newChat', async () => {
     const { result } = renderHook(() => useChat('gpt-4o', 'medium', false));
 
     // Ask initial question
@@ -125,9 +125,9 @@ describe('useChat', () => {
     const messagesAfterFirstQuestion = result.current.messages.length;
     expect(messagesAfterFirstQuestion).toBeGreaterThan(0);
 
-    // Clear screen
+    // Start new chat
     act(() => {
-      result.current.clearScreen();
+      result.current.newChat();
     });
 
     expect(result.current.messages).toEqual([]);
@@ -143,5 +143,28 @@ describe('useChat', () => {
 
     // Should start fresh conversation
     expect(result.current.messages.length).toBe(2); // Fresh start: user + assistant
+  });
+
+  it('should reuse the last user prompt when handleRegenerate is called', async () => {
+    const { result } = renderHook(() => useChat('gpt-4o', 'medium', false));
+
+    act(() => {
+      result.current.setInput('Original question');
+    });
+
+    await act(async () => {
+      await result.current.ask();
+    });
+
+    const messagesAfterFirstAsk = result.current.messages.length;
+    expect(messagesAfterFirstAsk).toBeGreaterThan(0);
+
+    await act(async () => {
+      await result.current.handleRegenerate();
+    });
+
+    expect(result.current.messages.length).toBe(messagesAfterFirstAsk + 2);
+    const lastUserMessage = [...result.current.messages].reverse().find((m) => m.role === 'user');
+    expect(lastUserMessage?.content).toBe('Original question');
   });
 });

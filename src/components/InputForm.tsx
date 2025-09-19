@@ -5,11 +5,11 @@ interface InputFormProps {
   isLoading: boolean;
   onInputChange: (value: string) => void;
   onAsk: () => void;
-  onClearScreen: () => void;
+  onNewChat: () => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
-export default function InputForm({ input, isLoading, onInputChange, onAsk, onClearScreen, onKeyDown }: InputFormProps) {
+export default function InputForm({ input, isLoading, onInputChange, onAsk, onNewChat, onKeyDown }: InputFormProps) {
   return (
     <div className="space-y-3 sm:space-y-4">
       <textarea
@@ -30,10 +30,10 @@ export default function InputForm({ input, isLoading, onInputChange, onAsk, onCl
         </button>
         <div className="flex gap-2 sm:gap-3 order-2">
           <button
-            onClick={onClearScreen}
+            onClick={onNewChat}
             className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 font-medium text-sm transition-all duration-300 hover:transform hover:-translate-y-0.5"
           >
-            Clear Screen
+            New Chat
           </button>
         </div>
       </div>
