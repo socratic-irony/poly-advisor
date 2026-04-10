@@ -12,7 +12,7 @@ describe('SettingsComponent', () => {
     onSearchDepthChange: vi.fn(),
     forceSearch: true,
     onForceSearchChange: vi.fn(),
-    model: 'gpt-4.1',
+    model: 'gpt-5.4-mini',
     onModelChange: vi.fn(),
     storageError: null as string | null,
   };
@@ -68,10 +68,10 @@ describe('SettingsComponent', () => {
     expect(defaultProps.onForceSearchChange).toHaveBeenCalledWith(false);
   });
 
-  it('renders only gpt-4.1 in the model select', () => {
+  it('renders only gpt-5.4-mini in the model select', () => {
     render(<Settings {...defaultProps} />);
     const select = screen.getByLabelText('LLM model:');
-    expect(select).toHaveTextContent('gpt-4.1');
+    expect(select).toHaveTextContent('gpt-5.4-mini');
     expect(select.querySelectorAll('option').length).toBe(1);
   });
 

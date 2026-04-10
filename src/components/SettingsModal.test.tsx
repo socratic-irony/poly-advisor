@@ -14,7 +14,7 @@ describe('SettingsModal', () => {
     onSearchDepthChange: vi.fn(),
     forceSearch: true,
     onForceSearchChange: vi.fn(),
-    model: 'gpt-4.1',
+    model: 'gpt-5.4-mini',
     onModelChange: vi.fn(),
     storageError: null as string | null,
   };
