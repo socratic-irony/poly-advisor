@@ -57,7 +57,7 @@ describe('useChat', () => {
   });
 
   it('should reset conversation context when newChat is called', async () => {
-    const { result } = renderHook(() => useChat('gpt-4o', 'medium', false));
+    const { result } = renderHook(() => useChat('gpt-5.4-mini', 'medium', false));
 
     // First, simulate setting input and asking a question to establish a previousResponseId
     act(() => {
@@ -96,7 +96,7 @@ describe('useChat', () => {
   });
 
   it('should clear all messages and input when newChat is called', () => {
-    const { result } = renderHook(() => useChat('gpt-4o', 'medium', false));
+    const { result } = renderHook(() => useChat('gpt-5.4-mini', 'medium', false));
 
     // Add some messages first
     act(() => {
@@ -117,7 +117,7 @@ describe('useChat', () => {
   });
 
   it('should start fresh conversation after newChat', async () => {
-    const { result } = renderHook(() => useChat('gpt-4o', 'medium', false));
+    const { result } = renderHook(() => useChat('gpt-5.4-mini', 'medium', false));
 
     // Ask initial question
     act(() => {
@@ -152,7 +152,7 @@ describe('useChat', () => {
   });
 
   it('should reuse the last user prompt when handleRegenerate is called', async () => {
-    const { result } = renderHook(() => useChat('gpt-4o', 'medium', false));
+    const { result } = renderHook(() => useChat('gpt-5.4-mini', 'medium', false));
 
     act(() => {
       result.current.setInput('Original question');
@@ -204,7 +204,7 @@ describe('useChat', () => {
       })
       .mockResolvedValue(defaultResponse);
 
-    const { result } = renderHook(() => useChat('gpt-4o', 'medium', false));
+    const { result } = renderHook(() => useChat('gpt-5.4-mini', 'medium', false));
 
     act(() => {
       result.current.setInput('Test output text handling');

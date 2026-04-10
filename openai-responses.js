@@ -1,5 +1,5 @@
 const OPENAI_URL = "https://api.openai.com/v1/responses";
-const MODEL = "gpt-4o"; // Use a model that supports web_search
+const MODEL = "gpt-5.4-mini"; // Use a model that supports web_search
 
 // Only allow searching within Cal Poly domains. Subdomains are included automatically.
 export const ALLOWED_DOMAINS = [
