@@ -1,0 +1,20 @@
+export const cleanMarkdown = (text: string): string =>
+  text
+    .replace(/\n\s*\n\s*\n+/g, '\n\n')
+    .replace(/(\d+\.)\s*\n\s*([^\n])/g, '$1 $2')
+    .replace(/([*•\-+])\s*\n\s*([^\n])/g, '$1 $2')
+    .replace(/([^\n])\n(?!\n|[*\-+]|\d+\.|\s*[#>`])/g, '$1 ')
+    .replace(/\n\n([*•\-+])/g, '\n$1')
+    .replace(/\n\s{2,}([*\-+\d])/g, '\n  $1')
+    .replace(/\n\s+([*\-+]|\d+\.)/g, '\n$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\r\n/g, '\n')
+    .replace(/[ \t]+$/gm, '')
+    .replace(/^(#{1,6})\s*(.+)\s*$/gm, '$1 $2')
+    .replace(/```\s*\n/g, '```\n')
+    .replace(/\n\s*```/g, '\n```')
+    .replace(/>\s+/g, '> ')
+    .replace(/`\s+/g, '`')
+    .replace(/\s+`/g, '`')
+    .replace(/(\n[^\n#*\-+>\d`\s])/g, '\n$1')
+    .trim();

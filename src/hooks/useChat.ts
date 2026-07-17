@@ -4,33 +4,14 @@ import { Message } from '../types';
 import { parseEmlFile, readFileAsText } from '../utils/emlParser';
 import { stripHtml } from '../utils/stripHtml';
 import { loadAdvisingDocument, formatAdvisingDocumentForPrompt } from '../utils/advisingDocument';
-// @ts-ignore: openai-responses.js is a plain JS helper outside the TS root
-import { ALLOWED_DOMAINS } from '../../openai-responses.js';
+import { getChatErrorMessage } from '../utils/chatError';
+import { ALLOWED_DOMAINS } from '../config/search';
+import { createDeveloperPrompt, createEmailThreadPrompt, createSystemPrompt } from '../utils/chatPrompts';
+import { cleanMarkdown } from '../utils/markdown';
+import { extractResponseText, extractUniqueSources, filterUrlCitations } from '../utils/responseParser';
 
 const isEmailThread = (text: string): boolean => {
   return /^(from|subject|date|to):/im.test(text) || /On .* wrote:/i.test(text);
-};
-
-const cleanMarkdown = (text: string): string => {
-  return text
-    .replace(/\n\s*\n\s*\n+/g, '\n\n')
-    .replace(/(\d+\.)\s*\n\s*([^\n])/g, '$1 $2')
-    .replace(/([*•\-+])\s*\n\s*([^\n])/g, '$1 $2')
-    .replace(/([^\n])\n(?!\n|[*\-+]|\d+\.|\s*[#>`])/g, '$1 ')
-    .replace(/\n\n([*•\-+])/g, '\n$1')
-    .replace(/\n\s{2,}([*\-+\d])/g, '\n  $1')
-    .replace(/\n\s+([*\-+]|\d+\.)/g, '\n$1')
-    .replace(/[ \t]{2,}/g, ' ')
-    .replace(/\r\n/g, '\n')
-    .replace(/[ \t]+$/gm, '')
-    .replace(/^(#{1,6})\s*(.+)\s*$/gm, '$1 $2')
-    .replace(/```\s*\n/g, '```\n')
-    .replace(/\n\s*```/g, '\n```')
-    .replace(/>\s+/g, '> ')
-    .replace(/`\s+/g, '`')
-    .replace(/\s+`/g, '`')
-    .replace(/(\n[^\n#*\-+>\d`\s])/g, '\n$1')
-    .trim();
 };
 
 const nextFrame = () =>
@@ -41,100 +22,6 @@ const nextFrame = () =>
       setTimeout(() => resolve(), 0);
     }
   });
-
-const extractUniqueSources = (annotations: any[]): Message['sources'] => {
-  if (!Array.isArray(annotations)) {
-    return undefined;
-  }
-
-  const unique = annotations.reduce((acc: NonNullable<Message['sources']>, annotation: any) => {
-    const url = annotation?.url;
-    if (!url) {
-      return acc;
-    }
-
-    if (!acc.some((source) => source.url === url)) {
-      acc.push({
-        title: annotation.title || url,
-        url,
-      });
-    }
-
-    return acc;
-  }, [] as NonNullable<Message['sources']>);
-
-  return unique.length > 0 ? unique : undefined;
-};
-
-const collectTextAndAnnotations = (content: any): { text: string; annotations: any[] } => {
-  const texts: string[] = [];
-  const annotations: any[] = [];
-
-  const visit = (node: any) => {
-    if (!node) {
-      return;
-    }
-
-    if (typeof node === 'string') {
-      const trimmed = node.trim();
-      if (trimmed) {
-        texts.push(trimmed);
-      }
-      return;
-    }
-
-    if (typeof node.text === 'string') {
-      const trimmed = node.text.trim();
-      if (trimmed) {
-        texts.push(trimmed);
-      }
-      if (Array.isArray(node.annotations)) {
-        annotations.push(...node.annotations);
-      }
-    }
-
-    if (Array.isArray(node)) {
-      node.forEach(visit);
-    }
-
-    const childContent = (node as any).content;
-    if (Array.isArray(childContent)) {
-      childContent.forEach(visit);
-    } else if (childContent) {
-      visit(childContent);
-    }
-  };
-
-  visit(content);
-
-  return {
-    text: texts.join('\n').trim(),
-    annotations,
-  };
-};
-
-const extractResponseText = (response: any): { text: string; annotations: any[] } => {
-  const outputs = Array.isArray(response?.output) ? response.output : [];
-
-  for (const item of outputs) {
-    const { text, annotations } = collectTextAndAnnotations(item);
-    if (text) {
-      return { text, annotations };
-    }
-  }
-
-  const aggregated = collectTextAndAnnotations(response?.output_text);
-  if (aggregated.text) {
-    return aggregated;
-  }
-
-  const fallback = collectTextAndAnnotations(response?.response?.output_text);
-  if (fallback.text) {
-    return fallback;
-  }
-
-  return { text: '', annotations: [] };
-};
 
 export function useChat(
   model: string,
@@ -176,71 +63,17 @@ export function useChat(
     });
   };
 
-  const getSystemDepthText = (): string => {
-    return searchDepth === 'high'
-      ? "Use a high-depth web search within *.calpoly.edu (cast a wider net, review more authoritative pages)."
-      : "Use a medium-depth web search within *.calpoly.edu.";
-  };
-
-  const getBaseSystemPrompt = async (): Promise<string> => {
+  const createSystemContent = async (includeTimestampNote = false): Promise<Array<{ type: "input_text"; text: string }>> => {
     const advisingDoc = await loadAdvisingDocument();
     const formattedAdvisingDoc = formatAdvisingDocumentForPrompt(advisingDoc);
-
-    return "You are playing the role of a student advisor for a university. " +
-      "The university is Cal Poly, San Luis Obispo. ASSUME ALL QUESTIONS PERTAIN TO CAL POLY, SAN LUIS OBISPO unless otherwise noted. " +
-      "First, check the attached advising document which contains authoritative information about the Philosophy department. " +
-      "Search only within calpoly.edu and provide information only that comes from calpoly.edu unless explicitly asked otherwise. " +
-      getSystemDepthText() + " " +
-      "Prefer the most recent official policy, catalog, Registrar, and advising pages. " +
-      "Give clear step-by-step instructions when forms/approvals are involved. " +
-      "If the exact year is unclear, cite the most recent year you can find and label it; " +
-      "if the specific year is not available, link the closest official source. " +
-      "Always include inline citations and links with URLs. " +
-      "However, DO NOT include a list e.g. of `**Sources**` at the end -- these are included in the JSON response. " +
-      "Use absolute dates (e.g., July 28, 2025). Ask a brief clarifying question if necessary." +
-      formattedAdvisingDoc;
-  };
-
-  const getBaseDeveloperPrompt = (): string => {
-    return "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. Do not sign responses or add any signature. " +
-      "Always produce inline citations and a Sources list with titles and URLs. Links must open in a new tab.";
-  };
-
-  const getEmailThreadUserPrompt = (content: string): string => {
-    return "The following is an email thread. Infer roles (advisor = RJ, Philosophy; student = the other party). " +
-      "Draft a concise reply with cited Cal Poly URLs. Do not include any signature or sign-off.\n\n" +
-      "Email thread:\n\n" + content;
-  };
-
-  const createSystemContent = async (includeTimestampNote = false): Promise<Array<{ type: "input_text"; text: string }>> => {
-    let systemText = await getBaseSystemPrompt();
-    if (includeTimestampNote) {
-      systemText = systemText.replace(
-        "State the date when policies were last updated, if available. ",
-        ""
-      );
-    } else {
-      systemText = systemText.replace(
-        "Prefer the most recent official policy, catalog, Registrar, and advising pages. ",
-        "Prefer the most recent official policy, catalog, Registrar, and advising pages. State the date when policies were last updated, if available. "
-      );
-    }
-    return [{ type: "input_text" as const, text: systemText }];
+    return [{
+      type: "input_text" as const,
+      text: createSystemPrompt(searchDepth, formattedAdvisingDoc, includeTimestampNote),
+    }];
   };
 
   const createDeveloperContent = (chatMode = false): Array<{ type: "input_text"; text: string }> => {
-    let devText = getBaseDeveloperPrompt();
-    if (chatMode) {
-      devText = devText.replace(
-        "Identity: Advisor initials RJ (PHIL). Assume student major PHIL unless otherwise stated. Do not sign responses or add any signature. " +
-        "Always produce inline citations and a Sources list with titles and URLs. Links must open in a new tab.",
-        "Identity: You are fielding a question sent to the email address ryjenkin. " +
-        "Assume the student's major is PHIL unless otherwise stated. Do not sign responses or add any signature. " +
-        "Always produce inline citations. Do not include a list of Sources or References. " +
-        "Links must open in a new tab."
-      );
-    }
-    return [{ type: "input_text" as const, text: devText }];
+    return [{ type: "input_text" as const, text: createDeveloperPrompt(chatMode) }];
   };
 
   const fetchSuggestions = async (question: string, answer: string): Promise<string[]> => {
@@ -341,7 +174,8 @@ export function useChat(
     console.error('Error:', error);
     const errorMessage: Message = {
       role: 'assistant',
-      content: `Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
+      content: getChatErrorMessage(error),
+      isError: true,
     };
 
     if (assistantMessageIndex >= 0) {
@@ -390,9 +224,7 @@ export function useChat(
 
     const { text, annotations } = extractResponseText(response);
     const sources = extractUniqueSources(
-      Array.isArray(annotations)
-        ? annotations.filter((a: any) => a?.type === 'url_citation')
-        : []
+      filterUrlCitations(annotations)
     );
     const cleanedText = cleanMarkdown(text);
 
@@ -425,7 +257,7 @@ export function useChat(
     setInput('');
 
     try {
-      const userContent = isEmailThread(query) ? getEmailThreadUserPrompt(query) : query;
+    const userContent = isEmailThread(query) ? createEmailThreadPrompt(query) : query;
 
       await runAssistantFlow({
         assistantMessageIndex,
@@ -465,7 +297,7 @@ export function useChat(
 
       await runAssistantFlow({
         assistantMessageIndex,
-        userContent: getEmailThreadUserPrompt(content),
+        userContent: createEmailThreadPrompt(content),
         suggestionsSeed: content,
         includeTimestampNote: false,
         developerChatMode: false,
@@ -488,7 +320,8 @@ export function useChat(
       console.error('Error processing file:', error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: `Error processing file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        content: 'Could not read that email file. Please choose a valid .eml file and try again.',
+        isError: true,
       };
       setMessages(prev => [...prev, errorMessage]);
       setIsLoading(false);
@@ -506,7 +339,8 @@ export function useChat(
       console.error('Error processing file:', error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: `Error processing file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        content: 'Could not read that email file. Please choose a valid .eml file and try again.',
+        isError: true,
       };
       setMessages(prev => [...prev, errorMessage]);
     }

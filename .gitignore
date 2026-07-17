@@ -254,6 +254,9 @@ web_modules/
 # TypeScript cache
 *.tsbuildinfo
 
+# Local planning notes
+ROADMAP.local.md
+
 # Optional npm cache directory
 .npm
 

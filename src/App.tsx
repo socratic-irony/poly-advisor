@@ -125,6 +125,8 @@ export default function App() {
           onAsk={handleAsk}
           onNewChat={newChat}
           onKeyDown={handleKeyDown}
+          onFileInstantReply={processFileForInstantReply}
+          onFileComment={processFileForComment}
         />
       </div>
 

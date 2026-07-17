@@ -6,12 +6,12 @@ A client-only Single Page Application (SPA) that provides an AI-powered advisor 
 
 ## Features
 
-- **BYOK (Bring Your Own Key)**: Uses your OpenAI API key stored locally in browser
+- **BYOK (Bring Your Own Key)**: Uses your OpenAI API key stored in this browser's localStorage
 - **Cal Poly Focus**: Searches exclusively within `*.calpoly.edu` domains
 - **Smart Citations**: Provides inline citations and clickable sources
 - **Email Thread Support**: Detects email threads and generates advisor responses
 - **Configurable Search**: Choose between medium and high-depth web searches
-- **Streaming Responses**: Real-time response streaming for faster interaction
+- **Progressive Responses**: Reveals completed responses progressively for a smoother reading experience
 - **Mobile-Friendly**: Responsive design optimized for all devices
 - **No Backend Required**: Runs entirely in the browser, perfect for GitHub Pages
 
@@ -32,7 +32,7 @@ A client-only Single Page Application (SPA) that provides an AI-powered advisor 
 
 ## Example Questions
 
-- "When is the add/drop deadline for Fall 2024?"
+- "When is the add/drop deadline for Fall 2026?"
 - "How do I change my major to Philosophy?"
 - "What forms do I need to submit for late withdrawal?"
 
@@ -104,9 +104,14 @@ This app is configured for GitHub Pages deployment. Push to the main branch to t
 
 ## Security
 
-- API keys are stored only in your browser's localStorage
-- No sensitive data is transmitted to our servers
-- All OpenAI requests are made directly from your browser
+- Your API key is saved in this browser's localStorage until you use **Forget** in Settings.
+- This is a browser-only app: requests go directly from your browser to the OpenAI API, not through a Poly Advisor server.
+- Questions and any pasted or uploaded `.eml` email content are included in those API requests. Do not submit information you should not share with OpenAI.
+- Never commit an API key to this repository or any other source file.
+
+## Advising-document status
+
+The bundled Philosophy advising reference is for the **2025–2026** academic year. The app is configured to search official Cal Poly pages for current information, but the static reference must be replaced when the official 2026–2027 document is available.
 
 ## Architecture
 
@@ -119,4 +124,4 @@ Built with:
 
 ## Privacy
 
-Your API key and conversations are never stored on our servers. All data remains in your browser session.
+Poly Advisor does not store your API key or conversations on its own server. Request content is sent directly to the OpenAI API as described above.

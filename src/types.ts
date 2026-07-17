@@ -6,6 +6,7 @@ export interface Message {
     url: string;
   }>;
   suggestions?: string[];
+  isError?: boolean;
   attachment?: {
     fileName: string;
     type: 'eml';

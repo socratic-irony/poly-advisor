@@ -56,4 +56,42 @@ describe('InputForm', () => {
     fireEvent.keyDown(textarea, { key: 'Enter', code: 'Enter' });
     expect(defaultProps.onKeyDown).toHaveBeenCalled();
   });
+
+  it('offers keyboard-accessible email file pickers for both email workflows', () => {
+    const onFileInstantReply = vi.fn();
+    const onFileComment = vi.fn();
+    render(
+      <InputForm
+        {...defaultProps}
+        onFileInstantReply={onFileInstantReply}
+        onFileComment={onFileComment}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Draft reply from email' }));
+    const instantReplyInput = screen.getByLabelText('Email file for an instant reply');
+    fireEvent.change(instantReplyInput, {
+      target: { files: [new File(['From: student'], 'question.eml', { type: 'message/rfc822' })] },
+    });
+    expect(onFileInstantReply).toHaveBeenCalledOnce();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add email to prompt' }));
+    const commentInput = screen.getByLabelText('Email file to add to the prompt');
+    fireEvent.change(commentInput, {
+      target: { files: [new File(['From: student'], 'context.eml', { type: 'message/rfc822' })] },
+    });
+    expect(onFileComment).toHaveBeenCalledOnce();
+  });
+
+  it('rejects unsupported files with visible feedback', () => {
+    const onFileInstantReply = vi.fn();
+    render(<InputForm {...defaultProps} onFileInstantReply={onFileInstantReply} />);
+
+    fireEvent.change(screen.getByLabelText('Email file for an instant reply'), {
+      target: { files: [new File(['not an email'], 'notes.txt', { type: 'text/plain' })] },
+    });
+
+    expect(onFileInstantReply).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Only .eml email files are supported.');
+  });
 });

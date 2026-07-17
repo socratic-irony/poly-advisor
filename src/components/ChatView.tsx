@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Message as MessageType } from '../types';
 import { Mail, FileText } from 'lucide-react';
 import Message from './Message';
+import { ADVISING_CONFIG } from '../config/advisingConfig';
+import { isEmlFile, UNSUPPORTED_EMAIL_FILE_MESSAGE } from '../utils/emailFile';
 
 interface ChatViewProps {
   messages: MessageType[];
@@ -31,10 +33,7 @@ export default function ChatView({
   onSuggestionClick
 }: ChatViewProps) {
   const [isDragging, setIsDragging] = useState(false);
-
-  const isValidEmlFile = (file: File) => {
-    return file.name.toLowerCase().endsWith('.eml') || file.type === 'message/rfc822';
-  };
+  const [dropError, setDropError] = useState<string | null>(null);
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -46,6 +45,7 @@ export default function ChatView({
                     e.dataTransfer?.files?.length > 0;
     
     if (hasFiles) {
+      setDropError(null);
       setIsDragging(true);
     }
   };
@@ -74,6 +74,9 @@ export default function ChatView({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (e.target === e.currentTarget && e.dataTransfer.files.length > 0) {
+      setDropError(UNSUPPORTED_EMAIL_FILE_MESSAGE);
+    }
     setIsDragging(false);
   };
 
@@ -82,13 +85,12 @@ export default function ChatView({
     e.stopPropagation();
     
     const files = Array.from(e.dataTransfer?.files || []);
-    const emlFile = files.find(isValidEmlFile);
+    const emlFile = files.find(isEmlFile);
     
     if (emlFile) {
       onFileInstantReply(emlFile);
     } else if (files.length > 0) {
-      // Show user feedback if they dropped non-eml files
-      console.warn('Only .eml email files are supported. Please drop a .eml file.');
+      setDropError(UNSUPPORTED_EMAIL_FILE_MESSAGE);
     }
     
     setIsDragging(false);
@@ -99,13 +101,12 @@ export default function ChatView({
     e.stopPropagation();
     
     const files = Array.from(e.dataTransfer?.files || []);
-    const emlFile = files.find(isValidEmlFile);
+    const emlFile = files.find(isEmlFile);
     
     if (emlFile) {
       onFileComment(emlFile);
     } else if (files.length > 0) {
-      // Show user feedback if they dropped non-eml files
-      console.warn('Only .eml email files are supported. Please drop a .eml file.');
+      setDropError(UNSUPPORTED_EMAIL_FILE_MESSAGE);
     }
     
     setIsDragging(false);
@@ -127,6 +128,7 @@ export default function ChatView({
           {/* Left Dropzone - Instant Reply */}
           <div
             className="flex-1 p-4 m-2 border-2 border-dashed border-green-400 bg-green-50/80 rounded-lg flex flex-col items-center justify-center hover:bg-green-100/80 transition-colors"
+            data-testid="instant-reply-dropzone"
             onDrop={handleInstantReplyDrop}
             onDragOver={handleDragOver}
           >
@@ -162,6 +164,12 @@ export default function ChatView({
         </div>
       )}
 
+      {dropError && (
+        <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {dropError}
+        </div>
+      )}
+
       {/* Regular Chat Content */}
       {messages.length === 0 ? (
         <div className="h-full flex items-center justify-center">
@@ -175,13 +183,16 @@ export default function ChatView({
             </p>
             <div className="grid grid-cols-1 gap-2 sm:gap-3 text-xs sm:text-sm">
               <div className="bg-green-50 text-green-700 px-3 sm:px-4 py-2 rounded-lg border border-green-200">
-                <strong>Try:</strong> "When is the add/drop deadline for Fall 2024?"
+                <strong>Try:</strong> "When is the add/drop deadline for Fall 2026?"
               </div>
               <div className="bg-amber-50 text-amber-700 px-3 sm:px-4 py-2 rounded-lg border border-amber-200">
                 <strong>Or:</strong> "How do I change my major to Philosophy?"
               </div>
               <div className="bg-blue-50 text-blue-700 px-3 sm:px-4 py-2 rounded-lg border border-blue-200">
                 <strong>New:</strong> Drag .eml email files here for instant replies!
+              </div>
+              <div className="bg-gray-50 text-cal-poly-gray px-3 sm:px-4 py-2 rounded-lg border border-gray-200">
+                Reference document: {ADVISING_CONFIG.DOCUMENT_LABEL}
               </div>
             </div>
           </div>
@@ -196,8 +207,9 @@ export default function ChatView({
               isStreaming={streamingMessageIndex === index}
               copiedMessageIndex={copiedMessageIndex}
               onCopy={onCopy}
-              onRegenerate={onRegenerate}
-              onExport={onExport}
+            onRegenerate={onRegenerate}
+            onExport={onExport}
+            onRetry={onRegenerate}
               onSuggestionClick={onSuggestionClick}
             />
           ))}

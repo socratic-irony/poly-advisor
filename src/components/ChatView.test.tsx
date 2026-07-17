@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import ChatView from './ChatView';
 import { describe, it, expect, vi } from 'vitest';
 import { Message as MessageType } from '../types';
@@ -43,11 +43,26 @@ describe('ChatView', () => {
     render(<ChatView {...defaultProps} messages={[]} />);
     expect(screen.getByText('Ready to help!')).toBeInTheDocument();
     expect(screen.getByText('Drag .eml email files here for instant replies!')).toBeInTheDocument();
+    expect(screen.getByText(/Reference document: 2025–2026/)).toBeInTheDocument();
   });
 
   it('displays file attachment information', () => {
     render(<ChatView {...defaultProps} />);
     expect(screen.getByText('Email Attachment')).toBeInTheDocument();
     expect(screen.getByText('test.eml')).toBeInTheDocument();
+  });
+
+  it('shows a clear error when a non-email file is dropped', () => {
+    const { container } = render(<ChatView {...defaultProps} messages={[]} />);
+    const chat = container.firstElementChild!;
+    const dataTransfer = {
+      types: ['Files'],
+      files: [new File(['not an email'], 'notes.txt', { type: 'text/plain' })],
+    };
+
+    fireEvent.dragEnter(chat, { dataTransfer });
+    fireEvent.drop(screen.getByTestId('instant-reply-dropzone'), { dataTransfer });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Only .eml email files are supported.');
   });
 });

@@ -150,8 +150,11 @@ PGI+SGVsbG8gdGV4dDwvYj4=
     });
 
     it('skips parsing when payload exceeds limit', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const big = 'A'.repeat(5 * 1024 * 1024 + 10);
       expect(parseEmlFile(big)).toBe(big);
+      expect(warn).toHaveBeenCalledWith('EML payload too large, skipping parse');
+      warn.mockRestore();
     });
 
     it('handles CRLF line breaks and quoted boundaries', () => {

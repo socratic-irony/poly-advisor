@@ -144,4 +144,18 @@ describe('Message', () => {
     expect(screen.getByText('Follow-up two')).toBeInTheDocument();
     expect(screen.getAllByText('Ask →')).toHaveLength(2);
   });
+
+  it('offers a retry action for a failed assistant response', () => {
+    const onRetry = vi.fn();
+    render(
+      <Message
+        {...defaultProps}
+        message={{ role: 'assistant', content: 'Something went wrong.', isError: true }}
+        onRetry={onRetry}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetry).toHaveBeenCalledOnce();
+  });
 });

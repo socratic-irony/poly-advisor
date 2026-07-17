@@ -229,4 +229,21 @@ describe('useChat', () => {
       ]);
     });
   });
+
+  it('explains how to recover when an API key has not been saved', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    localStorageMock.getItem.mockReturnValue(null);
+    const { result } = renderHook(() => useChat('gpt-5.4-mini', 'medium', false));
+
+    await act(async () => {
+      await result.current.ask('What is the add/drop deadline?');
+    });
+
+    const assistantMessage = result.current.messages.find((message) => message.role === 'assistant');
+    expect(assistantMessage).toMatchObject({
+      content: 'Add your OpenAI API key in Settings, then try again.',
+      isError: true,
+    });
+    consoleError.mockRestore();
+  });
 });

@@ -14,13 +14,17 @@ export default defineConfig({
     // Optimize chunk splitting
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Separate vendor dependencies that change less frequently
-          vendor: ['react', 'react-dom'],
-          // OpenAI is large, keep it separate for better caching
-          openai: ['openai'],
-          // UI libraries that are stable
-          ui: ['lucide-react', 'markdown-to-jsx'],
+        manualChunks(id) {
+          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
+            return 'vendor';
+          }
+          if (id.includes('/node_modules/openai/')) {
+            return 'openai';
+          }
+          if (id.includes('/node_modules/lucide-react/') || id.includes('/node_modules/markdown-to-jsx/')) {
+            return 'ui';
+          }
+          return undefined;
         },
       },
     },
