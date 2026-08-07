@@ -87,7 +87,7 @@ export function useChat(
             content: [
               {
                 type: "input_text" as const,
-                text: "Generate two brief follow-up questions a student might ask next based on the conversation."
+                text: "Generate two brief follow-up questions a student might ask next based on the conversation. Return them as plain text only. Do not use Markdown, bullets, numbering, quotes, or special formatting."
               }
             ]
           },
@@ -96,7 +96,7 @@ export function useChat(
             content: [
               {
                 type: "input_text" as const,
-                text: `Original question: ${question}\nAnswer: ${answer}\nProvide two follow-up questions.`
+                text: `Original question: ${question}\nAnswer: ${answer}\nProvide two follow-up questions as plain text only.`
               }
             ]
           }

@@ -230,6 +230,31 @@ describe('useChat', () => {
     });
   });
 
+  it('requests plain-text follow-up questions without Markdown formatting', async () => {
+    mockResponsesCreate.mockReset();
+    mockResponsesCreate
+      .mockResolvedValueOnce(defaultResponse)
+      .mockResolvedValueOnce({
+        id: 'mock-suggestions',
+        output: [{ type: 'output_text', text: 'Follow up?' }],
+      });
+
+    const { result } = renderHook(() => useChat('gpt-5.6-luna', 'medium', false));
+
+    await act(async () => {
+      await result.current.ask('What is the add/drop deadline?');
+    });
+
+    await waitFor(() => {
+      expect(result.current.messages.some((message) => message.suggestions?.length)).toBe(true);
+    });
+
+    const suggestionRequest = mockResponsesCreate.mock.calls[1][0];
+    const suggestionSystemPrompt = suggestionRequest.input[0].content[0].text;
+    expect(suggestionSystemPrompt).toContain('plain text only');
+    expect(suggestionSystemPrompt).toContain('Do not use Markdown');
+  });
+
   it('explains how to recover when an API key has not been saved', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     localStorageMock.getItem.mockReturnValue(null);

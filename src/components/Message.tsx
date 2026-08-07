@@ -15,7 +15,7 @@ interface MessageProps {
   onSuggestionClick?: (suggestion: string) => void;
 }
 
-function FormattedMarkdown({ content }: { content: string }) {
+function FormattedMarkdown({ content, inline = false }: { content: string; inline?: boolean }) {
   return (
     <Markdown
       options={{
@@ -23,7 +23,9 @@ function FormattedMarkdown({ content }: { content: string }) {
           a: ({ ...props }) => (
             <a {...props} target="_blank" rel="noopener noreferrer" className="text-cal-poly-primary hover:text-cal-poly-green-light underline break-words" />
           ),
-          p: ({ ...props }) => <p {...props} className="mb-2 sm:mb-3 last:mb-0" />,
+          p: inline
+            ? ({ ...props }) => <span {...props} />
+            : ({ ...props }) => <p {...props} className="mb-2 sm:mb-3 last:mb-0" />,
           ul: ({ ...props }) => <ul {...props} className="list-disc ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
           ol: ({ ...props }) => <ol {...props} className="list-decimal ml-4 sm:ml-6 mb-2 sm:mb-3 space-y-1" />,
           li: ({ ...props }) => <li {...props} className="leading-relaxed" />,
@@ -181,7 +183,9 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
                 onClick={() => onSuggestionClick?.(suggestion)}
                 className={`px-4 py-2 rounded-lg border text-sm sm:text-base ${classes} transition-all duration-200 hover:shadow-sm active:transform active:scale-95 flex items-center gap-2 group`}
               >
-                <span>{suggestion}</span>
+                <span className="font-semibold">
+                  <FormattedMarkdown content={suggestion} inline />
+                </span>
                 <span className="text-xs opacity-60 group-hover:opacity-80">Ask →</span>
               </button>
             );

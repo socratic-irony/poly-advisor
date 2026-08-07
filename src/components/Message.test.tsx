@@ -145,6 +145,15 @@ describe('Message', () => {
     expect(screen.getAllByText('Ask →')).toHaveLength(2);
   });
 
+  it('renders Markdown formatting in suggestions', () => {
+    const messageWithSuggestions = { ...message, suggestions: ['**Follow-up one**'] };
+    render(<Message {...defaultProps} message={messageWithSuggestions} />);
+
+    const suggestionButton = screen.getByRole('button', { name: /Follow-up one/ });
+    expect(suggestionButton.querySelector('span')).toHaveClass('font-semibold');
+    expect(suggestionButton.querySelector('strong')).toHaveTextContent('Follow-up one');
+  });
+
   it('offers a retry action for a failed assistant response', () => {
     const onRetry = vi.fn();
     render(
