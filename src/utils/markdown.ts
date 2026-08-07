@@ -3,7 +3,7 @@ export const cleanMarkdown = (text: string): string =>
     .replace(/\n\s*\n\s*\n+/g, '\n\n')
     .replace(/(\d+\.)\s*\n\s*([^\n])/g, '$1 $2')
     .replace(/([*•\-+])\s*\n\s*([^\n])/g, '$1 $2')
-    .replace(/([^\n])\n(?!\n|[*\-+]|\d+\.|\s*[#>`])/g, '$1 ')
+    .replace(/([^\n])\n(?!\n|[*\-+]|\d+\.|\s*[#>`|])/g, '$1 ')
     .replace(/\n\n([*•\-+])/g, '\n$1')
     .replace(/\n\s{2,}([*\-+\d])/g, '\n  $1')
     .replace(/\n\s+([*\-+]|\d+\.)/g, '\n$1')
@@ -16,5 +16,5 @@ export const cleanMarkdown = (text: string): string =>
     .replace(/>\s+/g, '> ')
     .replace(/`\s+/g, '`')
     .replace(/\s+`/g, '`')
-    .replace(/(\n[^\n#*\-+>\d`\s])/g, '\n$1')
+    .replace(/(\n[^\n#*\-+>\d`\s|])/g, '\n$1')
     .trim();

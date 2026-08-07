@@ -154,6 +154,19 @@ describe('Message', () => {
     expect(suggestionButton.querySelector('strong')).toHaveTextContent('Follow-up one');
   });
 
+  it('renders Markdown tables with readable table styling', () => {
+    const tableMessage = {
+      ...message,
+      content: '| Percentage | Grade |\n| --- | --- |\n| 93–100% | A |',
+    };
+    render(<Message {...defaultProps} message={tableMessage} />);
+
+    const table = screen.getByRole('table');
+    expect(table).toHaveClass('w-full', 'border-collapse');
+    expect(screen.getByRole('columnheader', { name: 'Percentage' })).toHaveClass('bg-gray-50', 'font-semibold');
+    expect(screen.getByRole('cell', { name: '93–100%' })).toHaveClass('border');
+  });
+
   it('offers a retry action for a failed assistant response', () => {
     const onRetry = vi.fn();
     render(

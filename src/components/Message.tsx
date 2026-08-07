@@ -37,6 +37,11 @@ function FormattedMarkdown({ content, inline = false }: { content: string; inlin
           code: ({ ...props }) => <code {...props} className="bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-xs sm:text-sm font-mono break-words" />,
           pre: ({ ...props }) => <pre {...props} className="bg-gray-100 text-gray-800 p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-mono overflow-x-auto mb-2 sm:mb-3" />,
           blockquote: ({ ...props }) => <blockquote {...props} className="border-l-4 border-cal-poly-primary pl-3 sm:pl-4 py-2 bg-gray-50 mb-2 sm:mb-3 italic" />,
+          table: ({ ...props }) => <table {...props} className="w-full border-collapse mb-3 text-left" />,
+          thead: ({ ...props }) => <thead {...props} className="bg-gray-50" />,
+          tr: ({ ...props }) => <tr {...props} className="border-b border-gray-200" />,
+          th: ({ ...props }) => <th {...props} className="border border-gray-200 bg-gray-50 px-2 sm:px-3 py-2 font-semibold text-left" />,
+          td: ({ ...props }) => <td {...props} className="border border-gray-200 px-2 sm:px-3 py-2 align-top" />,
         },
       }}
     >
