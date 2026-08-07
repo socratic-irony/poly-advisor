@@ -88,7 +88,7 @@ Build a single‑page web app with a simple chat UI that:
 
 ## 7) Model & Tools
 
-* **Model:** `gpt-5.4-mini`.
+* **Model:** `gpt-5.6-luna`.
 * **Tools:** `[{ type: "web_search" }]` (or `web_search_preview` where appropriate).
 * **Tool choice:** `"auto"` by default, or `{ type: "web_search" }` when Force Web Search is enabled.
 * **Search depth:** If the tool exposes depth/context controls, set **Medium** by default; **High** when toggled. If not supported, encode depth preference in the **system prompt**.
@@ -117,7 +117,7 @@ Free text question or pasted email thread.
 
 ## 9) Request Assembly (Responses API)
 
-* `model`: `"gpt-5.4-mini"`.
+* `model`: `"gpt-5.6-luna"`.
 * `input`: array of roles: `system`, `developer`, `user`.
 * `tools`: `[ { "type": "web_search" } ]` (or `web_search_preview`).
 * `tool_choice`: `"auto"` by default; `{ "type": "web_search" }` when Force Web Search is enabled.
@@ -142,7 +142,7 @@ Free text question or pasted email thread.
 ## 11) Error Handling
 
 * **Missing/invalid API key**: Inline error with a link/hint to add a valid key; show **Forget Key** option.
-* **Tool/model mismatch (4xx)**: Fallback to `gpt-5.4-mini` or alternate tool name (`web_search_preview`).
+* **Tool/model mismatch (4xx)**: Fallback to `gpt-5.6-luna` or alternate tool name (`web_search_preview`).
 * **Rate limits/network**: Exponential backoff; “Try again” button.
 * **No Cal Poly results**: Ask a brief clarifying question rather than guessing.
 
@@ -233,7 +233,7 @@ Free text question or pasted email thread.
   <label><input type="radio" name="depth" value="high" /> High search</label>
   <label><input type="checkbox" id="forceSearch" /> Force web search</label>
   <select id="model">
-    <option value="gpt-5.4-mini">gpt-5.4-mini</option>
+    <option value="gpt-5.6-luna">gpt-5.6-luna</option>
   </select>
 </div>
 <p class="hint">Your key stays in this browser. Never commit it to code.</p>
@@ -325,7 +325,7 @@ Free text question or pasted email thread.
     render('You', query);
     els.q.value = '';
 
-    const model = els.model.value || "gpt-5.4-mini";
+    const model = els.model.value || "gpt-5.6-luna";
     const tool = { type: "web_search" }; // or "web_search_preview"
     const toolChoice = els.forceSearch.checked ? { type: "web_search" } : "auto";
 
@@ -393,7 +393,7 @@ Free text question or pasted email thread.
 
 ```js
 // core.js
-export async function askOpenAI({ apiKey, prompt, previousResponseId, forceSearch, highDepth, model = "gpt-5.4-mini" }) {
+export async function askOpenAI({ apiKey, prompt, previousResponseId, forceSearch, highDepth, model = "gpt-5.6-luna" }) {
   const depthText = highDepth
     ? "Use a high-depth web search within *.calpoly.edu."
     : "Use a medium-depth web search within *.calpoly.edu.";

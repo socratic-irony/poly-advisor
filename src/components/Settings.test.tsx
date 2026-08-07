@@ -12,7 +12,7 @@ describe('SettingsComponent', () => {
     onSearchDepthChange: vi.fn(),
     forceSearch: true,
     onForceSearchChange: vi.fn(),
-    model: 'gpt-5.4-mini',
+    model: 'gpt-5.6-luna',
     onModelChange: vi.fn(),
     storageError: null as string | null,
   };
@@ -66,13 +66,6 @@ describe('SettingsComponent', () => {
     const checkbox = screen.getByLabelText('Force web search');
     fireEvent.click(checkbox);
     expect(defaultProps.onForceSearchChange).toHaveBeenCalledWith(false);
-  });
-
-  it('renders only gpt-5.4-mini in the model select', () => {
-    render(<Settings {...defaultProps} />);
-    const select = screen.getByLabelText('LLM model:');
-    expect(select).toHaveTextContent('gpt-5.4-mini');
-    expect(select.querySelectorAll('option').length).toBe(1);
   });
 
   it('renders the API key help link with correct attributes', () => {

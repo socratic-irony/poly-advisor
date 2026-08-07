@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 export function useSettings() {
   const [apiKey, setApiKey] = useState<string>('');
-  const [model, setModel] = useState<string>('gpt-5.4-mini');
+  const [model, setModel] = useState<string>('gpt-5.6-luna');
   const [searchDepth, setSearchDepth] = useState<'medium' | 'high'>('medium');
   const [forceSearch, setForceSearch] = useState<boolean>(true);
   const [storageError, setStorageError] = useState<string | null>(null);

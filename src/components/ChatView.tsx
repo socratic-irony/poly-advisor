@@ -189,7 +189,7 @@ export default function ChatView({
                 <strong>Or:</strong> "How do I change my major to Philosophy?"
               </div>
               <div className="bg-blue-50 text-blue-700 px-3 sm:px-4 py-2 rounded-lg border border-blue-200">
-                <strong>New:</strong> Drag .eml email files here for instant replies!
+                Drag .eml email files here for instant replies
               </div>
               <div className="bg-gray-50 text-cal-poly-gray px-3 sm:px-4 py-2 rounded-lg border border-gray-200">
                 Reference document: {ADVISING_CONFIG.DOCUMENT_LABEL}

@@ -107,7 +107,7 @@ export default function SettingsComponent({
                 onChange={(e) => onModelChange(e.target.value)}
                 className="w-full sm:w-auto px-2 sm:px-3 py-1.5 sm:py-2 input-cal-poly rounded-lg text-xs sm:text-sm font-medium"
               >
-                <option value="gpt-5.4-mini">gpt-5.4-mini</option>
+                <option value="gpt-5.6-luna">gpt-5.6-luna</option>
               </select>
             </div>
           </div>

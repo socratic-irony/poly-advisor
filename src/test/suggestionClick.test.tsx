@@ -7,7 +7,7 @@ vi.mock('../hooks/useSettings', () => ({
   useSettings: () => ({
     apiKey: 'test-api-key',
     setApiKey: vi.fn(),
-    model: 'gpt-5.4-mini',
+    model: 'gpt-5.6-luna',
     setModel: vi.fn(),
     searchDepth: 'medium' as const,
     setSearchDepth: vi.fn(),

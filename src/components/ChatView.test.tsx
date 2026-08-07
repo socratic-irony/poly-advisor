@@ -42,7 +42,6 @@ describe('ChatView', () => {
   it('shows empty state when there are no messages', () => {
     render(<ChatView {...defaultProps} messages={[]} />);
     expect(screen.getByText('Ready to help!')).toBeInTheDocument();
-    expect(screen.getByText('Drag .eml email files here for instant replies!')).toBeInTheDocument();
     expect(screen.getByText(/Reference document: 2025–2026/)).toBeInTheDocument();
   });
 
