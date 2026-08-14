@@ -111,7 +111,7 @@ This app is configured for GitHub Pages deployment. Push to the main branch to t
 
 ## Advising-document status
 
-The bundled Philosophy advising reference is for the **2025–2026** academic year. The app is configured to search official Cal Poly pages for current information, but the static reference must be replaced when the official 2026–2027 document is available.
+The bundled Philosophy advising reference is imported from the latest **PHIL.docx** supplied for this app and loaded at runtime from `public/PHIL_Advising_doc.md` (the browser-readable conversion). The app is still configured to search official Cal Poly pages for current information.
 
 ## Architecture
 
