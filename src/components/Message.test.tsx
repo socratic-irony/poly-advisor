@@ -30,6 +30,19 @@ describe('Message', () => {
     expect(screen.getByText('Test Source')).toBeInTheDocument();
   });
 
+  it('renders the tools that were used for an assistant answer', () => {
+    const messageWithTools: MessageType = {
+      ...message,
+      toolsUsed: ['web_search', 'cla_guidance'],
+    };
+
+    render(<Message {...defaultProps} message={messageWithTools} />);
+
+    expect(screen.getByText('Tools used')).toBeInTheDocument();
+    expect(screen.getByText('Web search')).toBeInTheDocument();
+    expect(screen.getByText('CLA guidance')).toBeInTheDocument();
+  });
+
   it('does not render sources when not available', () => {
     const messageWithoutSource = { ...message, sources: undefined };
     render(<Message {...defaultProps} message={messageWithoutSource} />);

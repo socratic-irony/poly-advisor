@@ -124,6 +124,91 @@ describe('useChat', () => {
       .toBe('Mock response');
   });
 
+  it('shows the guidance activity while a local document lookup is pending', async () => {
+    let resolveInitialResponse!: (value: unknown) => void;
+    let resolveGuidanceLookup!: (value: string) => void;
+    const initialResponse = new Promise((resolve) => {
+      resolveInitialResponse = resolve;
+    });
+    const guidanceLookup = new Promise<string>((resolve) => {
+      resolveGuidanceLookup = resolve;
+    });
+
+    mockResponsesCreate.mockReset();
+    mockResponsesCreate
+      .mockReturnValueOnce(initialResponse)
+      .mockResolvedValueOnce(defaultResponse)
+      .mockResolvedValueOnce({
+        id: 'mock-suggestions',
+        output: [{ type: 'output_text', text: 'Follow up?' }],
+      });
+    mockExecuteGuidanceToolCall.mockReturnValueOnce(guidanceLookup);
+
+    const { result } = renderHook(() => useChat('gpt-5.6-luna', 'medium', false));
+    let askPromise!: Promise<void>;
+
+    act(() => {
+      askPromise = result.current.ask('When is the Fall 2026 add/drop deadline?');
+    });
+
+    await waitFor(() => expect(result.current.activeToolStatus).toBe('thinking'));
+
+    resolveInitialResponse({
+      id: 'guidance-call-response',
+      output: [
+        {
+          type: 'function_call',
+          name: 'search_advising_guidance',
+          call_id: 'guidance-call-1',
+          arguments: '{"document":"cla","query":"Fall 2026 add/drop"}',
+        },
+      ],
+    });
+
+    await waitFor(() => {
+      expect(result.current.activeToolStatus).toBe('cla_guidance');
+      expect(mockExecuteGuidanceToolCall).toHaveBeenCalled();
+    });
+
+    resolveGuidanceLookup('Relevant sanitized CLA guidance.');
+    await act(async () => {
+      await askPromise;
+    });
+
+    expect(result.current.activeToolStatus).toBeNull();
+    expect(result.current.messages.find((message) => message.role === 'assistant')?.toolsUsed)
+      .toEqual(['cla_guidance']);
+  });
+
+  it('records a web search when the Responses API reports one', async () => {
+    mockResponsesCreate.mockReset();
+    mockResponsesCreate
+      .mockResolvedValueOnce({
+        id: 'web-search-response',
+        output: [
+          { type: 'web_search_call', id: 'web-search-1', status: 'completed' },
+          {
+            type: 'message',
+            content: [{ type: 'output_text', text: 'Current Cal Poly answer.', annotations: [] }],
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        id: 'mock-suggestions',
+        output: [{ type: 'output_text', text: 'Follow up?' }],
+      });
+
+    const { result } = renderHook(() => useChat('gpt-5.6-luna', 'medium', true));
+
+    await act(async () => {
+      await result.current.ask('What is the current add/drop deadline?');
+    });
+
+    expect(result.current.messages.find((message) => message.role === 'assistant')?.toolsUsed)
+      .toEqual(['web_search']);
+    expect(result.current.activeToolStatus).toBeNull();
+  });
+
   it('should reset conversation context when newChat is called', async () => {
     const { result } = renderHook(() => useChat('gpt-5.6-luna', 'medium', false));
 

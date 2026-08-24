@@ -1,3 +1,12 @@
+export type ToolStatus =
+  | 'thinking'
+  | 'web_search'
+  | 'phil_guidance'
+  | 'cla_guidance'
+  | 'both_guidance';
+
+export type ToolUsed = 'web_search' | 'phil_guidance' | 'cla_guidance';
+
 export interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -6,6 +15,7 @@ export interface Message {
     url: string;
   }>;
   suggestions?: string[];
+  toolsUsed?: ToolUsed[];
   isError?: boolean;
   attachment?: {
     fileName: string;

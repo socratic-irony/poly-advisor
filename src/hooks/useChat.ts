@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import OpenAI from 'openai';
-import { Message } from '../types';
+import { Message, ToolStatus, ToolUsed } from '../types';
 import { parseEmlFile, readFileAsText } from '../utils/emlParser';
 import { stripHtml } from '../utils/stripHtml';
 import { getChatErrorMessage } from '../utils/chatError';
@@ -23,6 +23,24 @@ const nextFrame = () =>
     }
   });
 
+const guidanceDocumentFromArguments = (argumentsJson: unknown): 'phil' | 'cla' | 'both' | null => {
+  try {
+    const parsed = JSON.parse(typeof argumentsJson === 'string' ? argumentsJson : '{}');
+    return parsed?.document === 'phil' || parsed?.document === 'cla' || parsed?.document === 'both'
+      ? parsed.document
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+const guidanceStatusForDocuments = (documents: Set<'phil' | 'cla'>): ToolStatus | null => {
+  if (documents.has('phil') && documents.has('cla')) return 'both_guidance';
+  if (documents.has('phil')) return 'phil_guidance';
+  if (documents.has('cla')) return 'cla_guidance';
+  return null;
+};
+
 export function useChat(
   model: string,
   searchDepth: 'medium' | 'high',
@@ -31,6 +49,7 @@ export function useChat(
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [activeToolStatus, setActiveToolStatus] = useState<ToolStatus | null>(null);
   const [previousResponseId, setPreviousResponseId] = useState<string | null>(null);
   const [streamingMessageIndex, setStreamingMessageIndex] = useState<number | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
@@ -127,7 +146,8 @@ export function useChat(
   const streamContentToMessage = async (
     assistantMessageIndex: number,
     text: string,
-    sources?: Message['sources']
+    sources?: Message['sources'],
+    toolsUsed?: Message['toolsUsed']
   ) => {
     const totalLength = text.length;
 
@@ -135,7 +155,12 @@ export function useChat(
       setMessages((prev) =>
         prev.map((msg, idx) =>
           idx === assistantMessageIndex
-            ? { ...msg, content: text, sources: sources && sources.length > 0 ? sources : undefined }
+            ? {
+                ...msg,
+                content: text,
+                sources: sources && sources.length > 0 ? sources : undefined,
+                toolsUsed,
+              }
             : msg
         )
       );
@@ -157,6 +182,7 @@ export function useChat(
                 ...msg,
                 content: partial,
                 sources: isLast && sources && sources.length > 0 ? sources : msg.sources,
+                toolsUsed: isLast ? toolsUsed : msg.toolsUsed,
               }
             : msg
         )
@@ -196,6 +222,9 @@ export function useChat(
   }) => {
     const { assistantMessageIndex, userContent, suggestionsSeed, includeTimestampNote, developerChatMode } = options;
 
+    setActiveToolStatus(forceSearch ? 'web_search' : 'thinking');
+    await nextFrame();
+
     const client = createClient();
     const webSearchTool = { type: "web_search", filters: { allowed_domains: ALLOWED_DOMAINS } } as any;
     const tools = [webSearchTool, guidanceSearchTool] as any;
@@ -206,6 +235,10 @@ export function useChat(
 
     const systemContent = createSystemContent(includeTimestampNote);
     const devContent = createDeveloperContent(developerChatMode);
+    const toolsUsed: ToolUsed[] = [];
+    const recordTool = (tool: ToolUsed) => {
+      if (!toolsUsed.includes(tool)) toolsUsed.push(tool);
+    };
 
     let response = await client.responses.create({
       model,
@@ -221,11 +254,36 @@ export function useChat(
 
     for (let toolTurn = 0; toolTurn < 3; toolTurn += 1) {
       const outputItems = Array.isArray((response as any).output) ? (response as any).output : [];
+      const hasWebSearch = outputItems.some((item: any) => item?.type === 'web_search_call');
+      if (hasWebSearch) {
+        recordTool('web_search');
+        setActiveToolStatus('web_search');
+        await nextFrame();
+      }
+
       const guidanceCalls = outputItems.filter(
         (item: any) => item?.type === 'function_call' && item?.name === guidanceSearchTool.name
       );
 
       if (guidanceCalls.length === 0) break;
+
+      const guidanceDocuments = new Set<'phil' | 'cla'>();
+      guidanceCalls.forEach((call: any) => {
+        const document = guidanceDocumentFromArguments(call.arguments);
+        if (document === 'phil' || document === 'both') {
+          guidanceDocuments.add('phil');
+          recordTool('phil_guidance');
+        }
+        if (document === 'cla' || document === 'both') {
+          guidanceDocuments.add('cla');
+          recordTool('cla_guidance');
+        }
+      });
+      const guidanceStatus = guidanceStatusForDocuments(guidanceDocuments);
+      if (guidanceStatus) {
+        setActiveToolStatus(guidanceStatus);
+        await nextFrame();
+      }
 
       const functionOutputs = await Promise.all(guidanceCalls.map(async (call: any) => ({
         type: 'function_call_output' as const,
@@ -247,6 +305,8 @@ export function useChat(
     }
 
     setPreviousResponseId(response.id);
+    setActiveToolStatus('thinking');
+    await nextFrame();
 
     const { text, annotations } = extractResponseText(response);
     const sources = extractUniqueSources(
@@ -254,7 +314,7 @@ export function useChat(
     );
     const cleanedText = cleanMarkdown(text);
 
-    await streamContentToMessage(assistantMessageIndex, cleanedText, sources);
+    await streamContentToMessage(assistantMessageIndex, cleanedText, sources, toolsUsed);
 
     const suggestions = await fetchSuggestions(suggestionsSeed, cleanedText);
     setMessages((prev) =>
@@ -264,6 +324,7 @@ export function useChat(
               ...msg,
               content: cleanedText,
               sources: sources ?? msg.sources,
+              toolsUsed,
               ...(suggestions.length > 0 ? { suggestions } : {}),
             }
           : msg
@@ -297,6 +358,7 @@ export function useChat(
     } finally {
       setIsLoading(false);
       setStreamingMessageIndex(null);
+      setActiveToolStatus(null);
     }
   };
 
@@ -333,6 +395,7 @@ export function useChat(
     } finally {
       setIsLoading(false);
       setStreamingMessageIndex(null);
+      setActiveToolStatus(null);
     }
   };
 
@@ -352,6 +415,7 @@ export function useChat(
       setMessages(prev => [...prev, errorMessage]);
       setIsLoading(false);
       setStreamingMessageIndex(null);
+      setActiveToolStatus(null);
     }
   };
 
@@ -375,6 +439,7 @@ export function useChat(
   const newChat = () => {
     setPreviousResponseId(null);
     setStreamingMessageIndex(null);
+    setActiveToolStatus(null);
     setMessages([]);
     setInput('');
   };
@@ -391,6 +456,7 @@ export function useChat(
     messages,
     input,
     isLoading,
+    activeToolStatus,
     streamingMessageIndex,
     chatRef,
     setInput,

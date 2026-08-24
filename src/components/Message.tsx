@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Check, RotateCw, Download, Mail } from 'lucide-react';
+import { Copy, Check, RotateCw, Download, Mail, Wrench } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
 import { Message as MessageType } from '../types';
 
@@ -145,6 +145,25 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
               </button>
             </>
           )}
+        </div>
+      )}
+
+      {message.role === 'assistant' && !isStreaming && message.toolsUsed && message.toolsUsed.length > 0 && (
+        <div className="ml-8 sm:ml-11 mt-3 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-cal-poly-gray">
+          <div className="flex items-center gap-1.5 font-semibold text-cal-poly-gray-dark">
+            <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Tools used</span>
+          </div>
+          <span aria-hidden="true" className="text-gray-400">·</span>
+          {message.toolsUsed.map((tool) => (
+            <span key={tool} className="rounded-full bg-gray-100 px-2 py-1">
+              {{
+                web_search: 'Web search',
+                phil_guidance: 'PHIL guidance',
+                cla_guidance: 'CLA guidance',
+              }[tool]}
+            </span>
+          ))}
         </div>
       )}
 

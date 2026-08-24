@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Message as MessageType } from '../types';
+import { Message as MessageType, ToolStatus } from '../types';
 import { Mail, FileText } from 'lucide-react';
 import Message from './Message';
 import { ADVISING_CONFIG } from '../config/advisingConfig';
@@ -8,6 +8,7 @@ import { isEmlFile, UNSUPPORTED_EMAIL_FILE_MESSAGE } from '../utils/emailFile';
 interface ChatViewProps {
   messages: MessageType[];
   isLoading: boolean;
+  activeToolStatus: ToolStatus | null;
   streamingMessageIndex: number | null;
   chatRef: React.RefObject<HTMLDivElement>;
   copiedMessageIndex: number | null;
@@ -22,6 +23,7 @@ interface ChatViewProps {
 export default function ChatView({ 
   messages, 
   isLoading, 
+  activeToolStatus,
   streamingMessageIndex, 
   chatRef, 
   copiedMessageIndex, 
@@ -111,6 +113,14 @@ export default function ChatView({
     
     setIsDragging(false);
   };
+
+  const activityLabel = {
+    thinking: 'Thinking through the answer…',
+    web_search: 'Searching official Cal Poly pages…',
+    phil_guidance: 'Looking up PHIL reference docs…',
+    cla_guidance: 'Looking up CLA reference docs…',
+    both_guidance: 'Looking up PHIL and CLA reference docs…',
+  }[activeToolStatus ?? 'thinking'];
 
   return (
     <div
@@ -216,12 +226,12 @@ export default function ChatView({
         </div>
       )}
       {isLoading && (
-        <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6">
+        <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6" role="status" aria-live="polite">
           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-100 flex items-center justify-center">
             <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
           <span className="text-cal-poly-primary animate-pulse-cal-poly font-medium text-sm sm:text-base">
-            Poly Advisor is searching & thinking...
+            {activityLabel}
           </span>
         </div>
       )}

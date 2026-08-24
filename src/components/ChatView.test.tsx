@@ -17,6 +17,7 @@ describe('ChatView', () => {
   const defaultProps = {
     messages,
     isLoading: false,
+    activeToolStatus: null,
     streamingMessageIndex: null,
     chatRef: { current: null },
     copiedMessageIndex: null,
@@ -36,7 +37,12 @@ describe('ChatView', () => {
 
   it('shows loading indicator when loading', () => {
     render(<ChatView {...defaultProps} isLoading={true} />);
-    expect(screen.getByText('Poly Advisor is searching & thinking...')).toBeInTheDocument();
+    expect(screen.getByText('Thinking through the answer…')).toBeInTheDocument();
+  });
+
+  it('updates the loading indicator for a guidance lookup', () => {
+    render(<ChatView {...defaultProps} isLoading={true} activeToolStatus="cla_guidance" />);
+    expect(screen.getByText('Looking up CLA reference docs…')).toBeInTheDocument();
   });
 
   it('shows empty state when there are no messages', () => {
