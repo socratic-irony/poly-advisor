@@ -17,6 +17,8 @@ export interface Message {
   suggestions?: string[];
   toolsUsed?: ToolUsed[];
   isError?: boolean;
+  elapsedMs?: number;
+  costUsd?: number;
   attachment?: {
     fileName: string;
     type: 'eml';

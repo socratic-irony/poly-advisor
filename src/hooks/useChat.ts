@@ -9,6 +9,16 @@ import { createDeveloperPrompt, createEmailThreadPrompt, createSystemPrompt } fr
 import { executeGuidanceToolCall, guidanceSearchTool } from '../utils/guidanceTool';
 import { cleanMarkdown } from '../utils/markdown';
 import { extractResponseText, extractUniqueSources, filterUrlCitations } from '../utils/responseParser';
+import { estimateCostUsd } from '../utils/cost';
+
+const readUsageTokens = (response: unknown): { input: number; output: number } => {
+  const usage = (response as any)?.usage;
+  if (!usage || typeof usage !== 'object') return { input: 0, output: 0 };
+  return {
+    input: typeof usage.input_tokens === 'number' ? usage.input_tokens : 0,
+    output: typeof usage.output_tokens === 'number' ? usage.output_tokens : 0,
+  };
+};
 
 const isEmailThread = (text: string): boolean => {
   return /^(from|subject|date|to):/im.test(text) || /On .* wrote:/i.test(text);
@@ -96,7 +106,11 @@ export function useChat(
     return [{ type: "input_text" as const, text: createDeveloperPrompt(chatMode) }];
   };
 
-  const fetchSuggestions = async (question: string, answer: string): Promise<string[]> => {
+  const fetchSuggestions = async (
+    question: string,
+    answer: string,
+    onUsage?: (inputTokens: number, outputTokens: number) => void
+  ): Promise<string[]> => {
     try {
       const client = createClient();
       const response = await client.responses.create({
@@ -122,6 +136,9 @@ export function useChat(
           }
         ]
       }, { timeout: RESPONSE_TIMEOUT_MS });
+
+      const usage = readUsageTokens(response);
+      onUsage?.(usage.input, usage.output);
 
       const { text } = extractResponseText(response);
 
@@ -228,6 +245,15 @@ export function useChat(
     setActiveToolStatus(forceSearch ? 'web_search' : 'thinking');
     await nextFrame();
 
+    const startedAt = Date.now();
+    let usageInputTokens = 0;
+    let usageOutputTokens = 0;
+    const accumulateUsage = (response: unknown) => {
+      const usage = readUsageTokens(response);
+      usageInputTokens += usage.input;
+      usageOutputTokens += usage.output;
+    };
+
     const client = createClient();
     const webSearchTool = { type: "web_search", filters: { allowed_domains: ALLOWED_DOMAINS } } as any;
     const tools = [webSearchTool, guidanceSearchTool] as any;
@@ -254,6 +280,7 @@ export function useChat(
       tool_choice: toolChoice as any,
       previous_response_id: previousResponseId || undefined,
     }, { timeout: RESPONSE_TIMEOUT_MS });
+    accumulateUsage(response);
 
     for (let toolTurn = 0; toolTurn < MAX_GUIDANCE_TOOL_TURNS; toolTurn += 1) {
       const outputItems = Array.isArray((response as any).output) ? (response as any).output : [];
@@ -308,6 +335,7 @@ export function useChat(
         tool_choice: toolChoice as any,
         previous_response_id: response.id,
       }, { timeout: RESPONSE_TIMEOUT_MS });
+      accumulateUsage(response);
     }
 
     setPreviousResponseId(response.id);
@@ -322,7 +350,10 @@ export function useChat(
 
     await streamContentToMessage(assistantMessageIndex, cleanedText, sources, toolsUsed);
 
-    const suggestions = await fetchSuggestions(suggestionsSeed, cleanedText);
+    const suggestions = await fetchSuggestions(suggestionsSeed, cleanedText, (inputTokens, outputTokens) => {
+      usageInputTokens += inputTokens;
+      usageOutputTokens += outputTokens;
+    });
     setMessages((prev) =>
       prev.map((msg, idx) =>
         idx === assistantMessageIndex
@@ -331,6 +362,10 @@ export function useChat(
               content: cleanedText,
               sources: sources ?? msg.sources,
               toolsUsed,
+              elapsedMs: Date.now() - startedAt,
+              ...(usageInputTokens + usageOutputTokens > 0
+                ? { costUsd: estimateCostUsd(usageInputTokens, usageOutputTokens, model) }
+                : {}),
               ...(suggestions.length > 0 ? { suggestions } : {}),
             }
           : msg

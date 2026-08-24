@@ -6,9 +6,9 @@ interface TopMenuBarProps {
 
 export default function TopMenuBar({ onSettingsClick }: TopMenuBarProps) {
   return (
-    <div className="sticky top-0 z-50 flex items-center justify-between p-4 bg-white border-b border-gray-200 md:hidden">
+    <div className="sticky top-0 z-50 flex h-14 items-center justify-between px-4 bg-white/90 backdrop-blur border-b border-gray-200 md:hidden">
       <div className="flex items-center gap-2">
-        <span className="text-lg font-semibold text-cal-poly-primary">🎓 Poly Advisor</span>
+        <span className="text-base font-semibold text-cal-poly-primary tracking-tight">🎓 Poly Advisor</span>
       </div>
       
       <button

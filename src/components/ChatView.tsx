@@ -184,31 +184,31 @@ export default function ChatView({
       {messages.length === 0 ? (
         <div className="h-full flex items-center justify-center">
           <div className="text-center max-w-md px-4">
-            <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🤔</div>
-            <h2 className="text-xl sm:text-2xl font-semibold text-cal-poly-primary mb-2 sm:mb-3">
+            <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">🤔</div>
+            <h2 className="text-xl sm:text-2xl font-semibold text-cal-poly-primary mb-2 sm:mb-3 tracking-tight">
               Ready to help!
             </h2>
-            <p className="text-cal-poly-gray text-base sm:text-lg leading-relaxed mb-4 sm:mb-6">
+            <p className="text-cal-poly-gray text-sm sm:text-base leading-relaxed mb-5 sm:mb-6">
               Ask any Cal Poly question or paste an email thread for a personalized advisor response.
             </p>
-            <div className="grid grid-cols-1 gap-2 sm:gap-3 text-xs sm:text-sm">
-              <div className="bg-green-50 text-green-700 px-3 sm:px-4 py-2 rounded-lg border border-green-200">
-                <strong>Try:</strong> "When is the add/drop deadline for Fall 2026?"
+            <div className="grid grid-cols-1 gap-2 text-left text-xs sm:text-sm">
+              <div className="bg-green-50 text-green-700 px-3.5 py-2 rounded-lg border border-green-200">
+                <strong className="font-semibold">Try:</strong> "When is the add/drop deadline for Fall 2026?"
               </div>
-              <div className="bg-amber-50 text-amber-700 px-3 sm:px-4 py-2 rounded-lg border border-amber-200">
-                <strong>Or:</strong> "How do I change my major to Philosophy?"
+              <div className="bg-amber-50 text-amber-700 px-3.5 py-2 rounded-lg border border-amber-200">
+                <strong className="font-semibold">Or:</strong> "How do I change my major to Philosophy?"
               </div>
-              <div className="bg-blue-50 text-blue-700 px-3 sm:px-4 py-2 rounded-lg border border-blue-200">
+              <div className="bg-blue-50 text-blue-700 px-3.5 py-2 rounded-lg border border-blue-200">
                 Drag .eml email files here for instant replies
               </div>
-              <div className="bg-gray-50 text-cal-poly-gray px-3 sm:px-4 py-2 rounded-lg border border-gray-200">
+              <div className="bg-gray-50 text-cal-poly-gray px-3.5 py-2 rounded-lg border border-gray-200">
                 Reference document: {ADVISING_CONFIG.DOCUMENT_LABEL}
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="space-y-4 sm:space-y-6">
+        <div className="max-w-3xl mx-auto w-full space-y-5 sm:space-y-7">
           {messages.map((message, index) => (
             <Message 
               key={index}
@@ -226,13 +226,13 @@ export default function ChatView({
         </div>
       )}
       {isLoading && (
-        <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6" role="status" aria-live="polite">
-          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-100 flex items-center justify-center">
-            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="mt-4 sm:mt-6 flex justify-center" role="status" aria-live="polite">
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-green-200/80 bg-white/80 px-4 py-1.5 cal-poly-shadow">
+            <span className="h-3 w-3 rounded-full border-2 border-green-600 border-t-transparent animate-spin" aria-hidden="true" />
+            <span className="text-cal-poly-primary animate-pulse-cal-poly font-medium text-sm">
+              {activityLabel}
+            </span>
           </div>
-          <span className="text-cal-poly-primary animate-pulse-cal-poly font-medium text-sm sm:text-base">
-            {activityLabel}
-          </span>
         </div>
       )}
     </div>

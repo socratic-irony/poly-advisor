@@ -82,15 +82,13 @@ export default function App() {
 
       <div className="max-w-5xl mx-auto w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-col flex-1 overflow-y-auto">
         {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <div className="text-center mb-4 sm:mb-6">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-cal-poly-primary mb-2 tracking-tight">
-              🎓 Poly Advisor
-            </h1>
-            <p className="text-base sm:text-lg text-cal-poly-gray">
-              Your AI-powered Cal Poly assistant
-            </p>
-          </div>
+        <div className="text-center mb-5 sm:mb-7">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-cal-poly-primary mb-1 tracking-tight">
+            🎓 Poly Advisor
+          </h1>
+          <p className="text-sm sm:text-base text-cal-poly-gray">
+            Your AI-powered Cal Poly assistant
+          </p>
         </div>
 
         {/* Desktop settings button - positioned in upper right of chat area */}

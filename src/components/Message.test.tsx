@@ -193,4 +193,43 @@ describe('Message', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(onRetry).toHaveBeenCalledOnce();
   });
+
+  it('reports elapsed time and cost at the bottom of an assistant answer', () => {
+    const timedMessage: MessageType = {
+      ...message,
+      sources: undefined,
+      elapsedMs: 23_000,
+      costUsd: 0.002,
+    };
+    render(<Message {...defaultProps} message={timedMessage} />);
+
+    const stats = screen.getByText('23 seconds • 0.2¢');
+    expect(stats).toBeInTheDocument();
+  });
+
+  it('renders only the elapsed time when cost is unavailable', () => {
+    const timedOnlyMessage: MessageType = { ...message, sources: undefined, elapsedMs: 9_400 };
+    render(<Message {...defaultProps} message={timedOnlyMessage} />);
+
+    expect(screen.getByText('9.4 seconds')).toBeInTheDocument();
+    expect(screen.queryByText(/¢/)).not.toBeInTheDocument();
+  });
+
+  it('does not report query stats without timing data', () => {
+    render(<Message {...defaultProps} />);
+    expect(screen.queryByText(/seconds/)).not.toBeInTheDocument();
+  });
+
+  it('does not report query stats for user or error messages', () => {
+    render(
+      <Message {...defaultProps} message={{ role: 'user', content: 'Hi', elapsedMs: 23_000, costUsd: 0.002 }} />
+    );
+    render(
+      <Message
+        {...defaultProps}
+        message={{ role: 'assistant', content: 'Failed', isError: true, elapsedMs: 23_000, costUsd: 0.002 }}
+      />
+    );
+    expect(screen.queryByText(/•/)).not.toBeInTheDocument();
+  });
 });

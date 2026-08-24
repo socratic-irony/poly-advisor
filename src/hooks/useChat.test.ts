@@ -216,6 +216,29 @@ describe('useChat', () => {
     expect(result.current.activeToolStatus).toBeNull();
   });
 
+  it('attaches elapsed time and an estimated cost to the finished answer', async () => {
+    mockResponsesCreate.mockReset();
+    mockResponsesCreate
+      .mockResolvedValueOnce({
+        ...defaultResponse,
+        usage: { input_tokens: 80_000, output_tokens: 10_000 },
+      })
+      .mockResolvedValueOnce({
+        id: 'mock-suggestions',
+        output: [{ type: 'output_text', text: 'Follow up?' }],
+      });
+
+    const { result } = renderHook(() => useChat('gpt-5.6-luna', 'medium', false));
+
+    await act(async () => {
+      await result.current.ask('What is the add/drop deadline?');
+    });
+
+    const assistantMessage = result.current.messages.find((message) => message.role === 'assistant');
+    expect(assistantMessage?.elapsedMs).toBeGreaterThanOrEqual(0);
+    expect(assistantMessage?.costUsd).toBeCloseTo(0.2, 6);
+  });
+
   it('should reset conversation context when newChat is called', async () => {
     const { result } = renderHook(() => useChat('gpt-5.6-luna', 'medium', false));
 
