@@ -127,17 +127,21 @@ describe('useChat', () => {
   it('shows the guidance activity while a local document lookup is pending', async () => {
     let resolveInitialResponse!: (value: unknown) => void;
     let resolveGuidanceLookup!: (value: string) => void;
+    let resolveFollowupResponse!: (value: unknown) => void;
     const initialResponse = new Promise((resolve) => {
       resolveInitialResponse = resolve;
     });
     const guidanceLookup = new Promise<string>((resolve) => {
       resolveGuidanceLookup = resolve;
     });
+    const followupResponse = new Promise((resolve) => {
+      resolveFollowupResponse = resolve;
+    });
 
     mockResponsesCreate.mockReset();
     mockResponsesCreate
       .mockReturnValueOnce(initialResponse)
-      .mockResolvedValueOnce(defaultResponse)
+      .mockReturnValueOnce(followupResponse)
       .mockResolvedValueOnce({
         id: 'mock-suggestions',
         output: [{ type: 'output_text', text: 'Follow up?' }],
@@ -171,6 +175,9 @@ describe('useChat', () => {
     });
 
     resolveGuidanceLookup('Relevant sanitized CLA guidance.');
+    await waitFor(() => expect(result.current.activeToolStatus).toBe('thinking'));
+
+    resolveFollowupResponse(defaultResponse);
     await act(async () => {
       await askPromise;
     });

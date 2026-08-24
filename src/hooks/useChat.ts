@@ -23,6 +23,9 @@ const nextFrame = () =>
     }
   });
 
+const MAX_GUIDANCE_TOOL_TURNS = 3;
+const RESPONSE_TIMEOUT_MS = 45_000;
+
 const guidanceDocumentFromArguments = (argumentsJson: unknown): 'phil' | 'cla' | 'both' | null => {
   try {
     const parsed = JSON.parse(typeof argumentsJson === 'string' ? argumentsJson : '{}');
@@ -118,7 +121,7 @@ export function useChat(
             ]
           }
         ]
-      });
+      }, { timeout: RESPONSE_TIMEOUT_MS });
 
       const { text } = extractResponseText(response);
 
@@ -250,9 +253,9 @@ export function useChat(
       tools,
       tool_choice: toolChoice as any,
       previous_response_id: previousResponseId || undefined,
-    });
+    }, { timeout: RESPONSE_TIMEOUT_MS });
 
-    for (let toolTurn = 0; toolTurn < 3; toolTurn += 1) {
+    for (let toolTurn = 0; toolTurn < MAX_GUIDANCE_TOOL_TURNS; toolTurn += 1) {
       const outputItems = Array.isArray((response as any).output) ? (response as any).output : [];
       const hasWebSearch = outputItems.some((item: any) => item?.type === 'web_search_call');
       if (hasWebSearch) {
@@ -291,6 +294,9 @@ export function useChat(
         output: await executeGuidanceToolCall(typeof call.arguments === 'string' ? call.arguments : '{}'),
       })));
 
+      setActiveToolStatus('thinking');
+      await nextFrame();
+
       response = await client.responses.create({
         model,
         input: [
@@ -301,7 +307,7 @@ export function useChat(
         tools,
         tool_choice: toolChoice as any,
         previous_response_id: response.id,
-      });
+      }, { timeout: RESPONSE_TIMEOUT_MS });
     }
 
     setPreviousResponseId(response.id);

@@ -50,7 +50,10 @@ describe('guidance retrieval', () => {
 
     const result = await searchGuidance('cla', 'Fall 2026 add deadline');
 
-    expect(fetchSpy).toHaveBeenCalledWith('CLA_Faculty_Guidance_Fall_2026.md');
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'CLA_Faculty_Guidance_Fall_2026.md',
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
     expect(result).toContain('CLA Faculty Guidance (sanitized, Fall 2026)');
     expect(result).toContain('Add/Drop');
     expect(result).toContain('Fall 2026 add deadline');

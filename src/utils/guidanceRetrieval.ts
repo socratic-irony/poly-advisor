@@ -10,6 +10,7 @@ export type MarkdownSection = {
 
 const MAX_SECTION_COUNT = 4;
 const MAX_RESULT_LENGTH = 12000;
+const GUIDANCE_FETCH_TIMEOUT_MS = 10_000;
 
 const documentCache = new Map<GuidanceDocumentId, string>();
 
@@ -92,14 +93,26 @@ async function loadDocument(documentId: GuidanceDocumentId): Promise<string> {
   const cached = documentCache.get(documentId);
   if (cached !== undefined) return cached;
 
-  const response = await fetch(GUIDANCE_DOCUMENTS[documentId].path);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${documentId} guidance: ${response.status}`);
-  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), GUIDANCE_FETCH_TIMEOUT_MS);
 
-  const content = await response.text();
-  documentCache.set(documentId, content);
-  return content;
+  try {
+    const response = await fetch(GUIDANCE_DOCUMENTS[documentId].path, { signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${documentId} guidance: ${response.status}`);
+    }
+
+    const content = await response.text();
+    documentCache.set(documentId, content);
+    return content;
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(`Timed out loading ${documentId} guidance.`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 const formatDocumentResult = (
