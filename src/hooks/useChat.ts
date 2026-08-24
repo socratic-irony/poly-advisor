@@ -3,10 +3,10 @@ import OpenAI from 'openai';
 import { Message } from '../types';
 import { parseEmlFile, readFileAsText } from '../utils/emlParser';
 import { stripHtml } from '../utils/stripHtml';
-import { loadAdvisingDocument, formatAdvisingDocumentForPrompt } from '../utils/advisingDocument';
 import { getChatErrorMessage } from '../utils/chatError';
 import { ALLOWED_DOMAINS } from '../config/search';
 import { createDeveloperPrompt, createEmailThreadPrompt, createSystemPrompt } from '../utils/chatPrompts';
+import { executeGuidanceToolCall, guidanceSearchTool } from '../utils/guidanceTool';
 import { cleanMarkdown } from '../utils/markdown';
 import { extractResponseText, extractUniqueSources, filterUrlCitations } from '../utils/responseParser';
 
@@ -63,12 +63,10 @@ export function useChat(
     });
   };
 
-  const createSystemContent = async (includeTimestampNote = false): Promise<Array<{ type: "input_text"; text: string }>> => {
-    const advisingDoc = await loadAdvisingDocument();
-    const formattedAdvisingDoc = formatAdvisingDocumentForPrompt(advisingDoc);
+  const createSystemContent = (includeTimestampNote = false): Array<{ type: "input_text"; text: string }> => {
     return [{
       type: "input_text" as const,
-      text: createSystemPrompt(searchDepth, formattedAdvisingDoc, includeTimestampNote),
+      text: createSystemPrompt(searchDepth, includeTimestampNote),
     }];
   };
 
@@ -199,26 +197,54 @@ export function useChat(
     const { assistantMessageIndex, userContent, suggestionsSeed, includeTimestampNote, developerChatMode } = options;
 
     const client = createClient();
-    const tool = { type: "web_search", filters: { allowed_domains: ALLOWED_DOMAINS } } as any;
+    const webSearchTool = { type: "web_search", filters: { allowed_domains: ALLOWED_DOMAINS } } as any;
+    const tools = [webSearchTool, guidanceSearchTool] as any;
     const toolChoice =
       forceSearch
         ? ({ type: "web_search" as const } as any)
         : ("auto" as const);
 
-    const systemContent = await createSystemContent(includeTimestampNote);
+    const systemContent = createSystemContent(includeTimestampNote);
     const devContent = createDeveloperContent(developerChatMode);
 
-    const response = await client.responses.create({
+    let response = await client.responses.create({
       model,
       input: [
         { role: "system", content: systemContent },
         { role: "developer", content: devContent },
         { role: "user", content: [{ type: "input_text", text: userContent }] },
       ],
-      tools: [tool],
+      tools,
       tool_choice: toolChoice as any,
       previous_response_id: previousResponseId || undefined,
     });
+
+    for (let toolTurn = 0; toolTurn < 3; toolTurn += 1) {
+      const outputItems = Array.isArray((response as any).output) ? (response as any).output : [];
+      const guidanceCalls = outputItems.filter(
+        (item: any) => item?.type === 'function_call' && item?.name === guidanceSearchTool.name
+      );
+
+      if (guidanceCalls.length === 0) break;
+
+      const functionOutputs = await Promise.all(guidanceCalls.map(async (call: any) => ({
+        type: 'function_call_output' as const,
+        call_id: call.call_id,
+        output: await executeGuidanceToolCall(typeof call.arguments === 'string' ? call.arguments : '{}'),
+      })));
+
+      response = await client.responses.create({
+        model,
+        input: [
+          { role: "system", content: systemContent },
+          { role: "developer", content: devContent },
+          ...functionOutputs,
+        ],
+        tools,
+        tool_choice: toolChoice as any,
+        previous_response_id: response.id,
+      });
+    }
 
     setPreviousResponseId(response.id);
 

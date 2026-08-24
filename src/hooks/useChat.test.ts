@@ -1,8 +1,10 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useChat } from './useChat';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { executeGuidanceToolCall } from '../utils/guidanceTool';
 
 const mockResponsesCreate = vi.fn();
+const mockExecuteGuidanceToolCall = vi.mocked(executeGuidanceToolCall);
 
 // Mock localStorage
 const localStorageMock = {
@@ -32,6 +34,25 @@ vi.mock('../utils/advisingDocument', () => ({
   formatAdvisingDocumentForPrompt: vi.fn().mockReturnValue('')
 }));
 
+vi.mock('../utils/guidanceTool', () => ({
+  guidanceSearchTool: {
+    type: 'function',
+    name: 'search_advising_guidance',
+    description: 'Search bundled guidance',
+    parameters: {
+      type: 'object',
+      properties: {
+        document: { type: 'string', enum: ['phil', 'cla', 'both'] },
+        query: { type: 'string' },
+      },
+      required: ['document', 'query'],
+      additionalProperties: false,
+    },
+    strict: true,
+  },
+  executeGuidanceToolCall: vi.fn(),
+}));
+
 describe('useChat', () => {
   const defaultResponse = {
     id: 'mock-response-id',
@@ -53,7 +74,54 @@ describe('useChat', () => {
     vi.clearAllMocks();
     mockResponsesCreate.mockReset();
     mockResponsesCreate.mockResolvedValue(defaultResponse);
+    mockExecuteGuidanceToolCall.mockReset();
+    mockExecuteGuidanceToolCall.mockResolvedValue('Relevant sanitized CLA guidance.');
     localStorageMock.getItem.mockReturnValue('mock-api-key');
+  });
+
+  it('executes model-selected guidance retrieval before rendering the final answer', async () => {
+    mockResponsesCreate.mockReset();
+    mockResponsesCreate
+      .mockResolvedValueOnce({
+        id: 'guidance-call-response',
+        output: [
+          {
+            type: 'function_call',
+            name: 'search_advising_guidance',
+            call_id: 'guidance-call-1',
+            arguments: '{"document":"cla","query":"Fall 2026 add/drop"}',
+          },
+        ],
+      })
+      .mockResolvedValueOnce(defaultResponse)
+      .mockResolvedValueOnce({
+        id: 'mock-suggestions',
+        output: [{ type: 'output_text', text: 'Follow up?' }],
+      });
+
+    const { result } = renderHook(() => useChat('gpt-5.6-luna', 'medium', false));
+
+    await act(async () => {
+      await result.current.ask('When is the Fall 2026 add/drop deadline?');
+    });
+
+    expect(mockExecuteGuidanceToolCall).toHaveBeenCalledWith(
+      '{"document":"cla","query":"Fall 2026 add/drop"}'
+    );
+    expect(mockResponsesCreate.mock.calls[1][0]).toMatchObject({
+      previous_response_id: 'guidance-call-response',
+    });
+    expect(mockResponsesCreate.mock.calls[1][0].input).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'function_call_output',
+          call_id: 'guidance-call-1',
+          output: 'Relevant sanitized CLA guidance.',
+        }),
+      ])
+    );
+    expect(result.current.messages.find((message) => message.role === 'assistant')?.content)
+      .toBe('Mock response');
   });
 
   it('should reset conversation context when newChat is called', async () => {
