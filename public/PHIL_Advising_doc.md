@@ -1,4 +1,8 @@
-<!-- Imported from the user-supplied PHIL.docx on 2026-08-14. -->
+<!--
+  Sanitized public guidance derived from the user-supplied PHIL.docx on 2026-08-14.
+  Individual faculty, staff, advisor, and coordinator names have been removed.
+  Use current official Cal Poly and department pages for contacts and current policy.
+-->
 
 # Philosophy
 
@@ -8,13 +12,13 @@ Updated:
 
 - **<span class="mark"><u>Faculty Advising</u></span>**
 
-  - Ryan Jenkins-Associate Chair and Lead Advisor
+  - The associate chair and lead advisor handles major substitutions.
 
-  - Students can also meet with Ava Wright (concentration), ~~Francisco Fernflores (general advising/degree planning)~~ or Ken Brown (backup).
+  - Students can also meet with the concentration advisor, the general advising and degree-planning advisor, or a backup advisor.
 
-    - Ryan does MAJOR subs
+    - The lead advisor does MAJOR substitutions.
 
-    - Ava does CONCENTRATION subs. Ryan as needed.
+    - The concentration advisor does CONCENTRATION substitutions; the lead advisor assists as needed.
 
       - Eval prefers concentration subs to be done on a concentration form, but major/support sub forms would be accepted.
 
@@ -22,23 +26,23 @@ Updated:
 
     - All advisors can discuss concentrations
 
-    - Ava does Concentration declarations. Students can email or go to office hours
+    - The concentration advisor handles concentration declarations. Students can use the department's current email or office-hours route.
 
-    - Catalog change questions for new concentrations will be referred to Ryan
+    - Catalog-change questions for new concentrations will be referred to the lead advisor.
 
 Department has 2 scholarships! <https://philosophy.calpoly.edu/philosophy-scholarships>
 
 - **<u>Transfer Students</u>**
 
-  - Ken works with incoming transfer students to help them graduate as soon as possible. If transfer credit seems to be causing any problems, send them to Ken. Students will work with Ryan once they begin their classes.
+  - The transfer-credit advisor works with incoming transfer students to help them graduate as soon as possible. If transfer credit seems to be causing problems, refer the student to that advisor. Students work with the lead advisor once they begin their classes.
 
   - Blanket sub in place to use any A3 for PHIL 126 in major.
 
   - PHIL 101 should not be taken by transfer students
 
-    - Ruby will identify any PHIL credit that can be used to satisfy 101 and major blanket sub will be created when appropriate. Students should have transferred in with some course that subs for it – if this does not happen automatically, send to chair.
+    - The designated transfer-credit reviewer will identify PHIL credit that can satisfy 101 and create a major blanket substitution when appropriate. Students should have transferred in with some course that substitutes for it; if this does not happen automatically, refer the matter to the chair.
 
-    - Not all community college students come in with prior PHIL coursework (rare). Refer to Ken and he will decide case-by-case what to do.
+    - Not all community-college students arrive with prior PHIL coursework. Refer those rare cases to the transfer-credit advisor for a case-by-case decision.
 
   - Articulated transfer credit or subs will generally cover PHIL 230 and 231
 
@@ -50,15 +54,15 @@ Department has 2 scholarships! <https://philosophy.calpoly.edu/philosophy-schola
 
   - Permission numbers:
 
-    - Blocked into PHIL 126. Will need permission number from Ken if they want to change sections. In-person only
+    - Blocked into PHIL 126. Students need a permission number from the transfer-credit advisor to change sections. In-person only.
 
-    - Before the quarter begins, majors can ask Ken for permission numbers for any lower div PHIL, even if they have not met pre-reqs. Once the quarter begins, they will have to ask professors.
+    - Before the quarter begins, majors can ask the transfer-credit advisor for permission numbers for any lower-division PHIL, even if they have not met prerequisites. Once the quarter begins, they must ask professors.
 
-    - They can also ask Ken for permission numbers for PHIL 321, 331, 411, 412 and History of PHIL courses (have lower-div PHIL as pre-req)- courses for major when there are issues getting into classes. Usually not a problem
+    - Students can also ask the transfer-credit advisor for permission numbers for PHIL 321, 331, 411, 412, and History of PHIL courses when there are issues getting into major courses. These courses generally require lower-division PHIL prerequisites.
 
   - Non-majors:
 
-    - Ken will help students who are trying to change majors to PHIL get into PHIL courses. Ryan can discuss change of major process.
+    - The transfer-credit advisor can help students who are trying to change majors to PHIL get into PHIL courses. The lead advisor can discuss the change-of-major process.
 
     - Do not advertise this, but students can ask for permission numbers for A3 PHIL 126 even if they haven’t completed A2
 
@@ -74,7 +78,7 @@ Department has 2 scholarships! <https://philosophy.calpoly.edu/philosophy-schola
 
 - **<u>Concentrations</u>**
 
-  - Ava-Concentration declaration
+  - Concentration advisor - concentration declaration
 
   - Students can talk with any PHIL Advisor about concentrations
 
@@ -102,9 +106,9 @@ Department has 2 scholarships! <https://philosophy.calpoly.edu/philosophy-schola
 
     - Now only PHIL 385 (no longer PHIL 285)
 
-    - Students are recruited by Jacob Sparks – Ethics bowl is usually a fall and possibly winter quarter commitment
+    - Students are recruited by the Ethics Bowl faculty coordinator. Ethics Bowl is usually a fall and possibly winter quarter commitment.
 
-    - Take 385 in Fall, if they make it to Nationals, they need to take it in Winter –DPR automatically recognizes the units. 3 units- students need to be aware that they may be a unit short. PHIL 400-1 unit to get 4 units, students need to check in with Ken about this possibility
+    - Take 385 in Fall; if the team reaches Nationals, students need to take it in Winter. DPR automatically recognizes the units. Students may be one unit short; PHIL 400 for one unit may bring the total to four units. Check with the department's current advising route about this possibility.
 
     - Send 1 or 2 teams of 5 up to Nationals/Regionals. Usually no more than 10 students have enrolled in the course, so all students have been able to participate in the competition. If more interest, may need to look at who gets to debate.
 
@@ -124,11 +128,11 @@ Department has 2 scholarships! <https://philosophy.calpoly.edu/philosophy-schola
 
   - Internship
 
-    - Currently, no PHIL or RELS internship option. Send students to Ken first so he can determine if PHIL 400 is appropriate. He will usually do PHIL 400 up to 4 units as independent study. Total credit limited to 8 units, with max of 4 per quarter. Typically, 1 unit is granted for it.
+    - There is currently no PHIL or RELS internship option. Refer students to the department's internship/independent-study advising route to determine whether PHIL 400 is appropriate. PHIL 400 is generally independent study, limited to 8 total units and a maximum of 4 per quarter; typically one unit is granted.
 
   - [Senior Project](https://philosophy.calpoly.edu/senior-project)
 
-    - Students always need to get a permission number from Ken for senior project classes (459, 460, 461).
+    - Students always need a permission number from the department's senior-project instructor of record for senior project classes (459, 460, 461).
 
       - **459 and 460 taken concurrently, followed by 461**
 
@@ -138,29 +142,29 @@ Department has 2 scholarships! <https://philosophy.calpoly.edu/philosophy-schola
 
       - 460- 1 unit (CR/No CR) -must submit SP agreement form and identify an advisor. This course is to be taken concurrently with 459 (activity). In this course: submit SP agreement form, choose advisor, research plan with abstract outline and bibliography, and timeline for completion. (offered summer in emergency cases)
 
-- 461- 2 units (letter graded) -write a 15–20-page paper under the direct supervision of a tenured faculty advisor-senior project advisor.  Some students use this writing for grad school.  Enroll with Ken as instructor of record then connected with faculty advisor. Offered summer in emergency cases.
+- 461- 2 units (letter graded) -write a 15–20-page paper under the direct supervision of a tenured faculty advisor-senior project advisor. Some students use this writing for graduate school. Enroll with the department's instructor of record, then connect with a faculty advisor. Offered summer in emergency cases.
 
-  - Department allows students to do a grade change form if their SP grade changed from “I” to “F” (refer to Ken as he is the instructor of record for senior project courses – has been the case with PHIL since 2014). Not using RP
+  - The department allows a grade-change form if a senior-project grade changes from “I” to “F.” Use the current instructor-of-record route for senior project courses. Not using RP.
 
   - Chair is the instructor of record, “F” will not be initially assigned an “I” will be (for all 3 senior project classes)
 
 - [**Change of Major**](https://cla.calpoly.edu/student-resources/change-major)
 
-  - Send all interested students to Ryan. He is willing to work with students on a case-by-case basis if they do not meet the GPA requirements.
+  - Send all interested students to the lead advisor. The lead advisor can work with students case by case if they do not meet GPA requirements.
 
   - PHIL 241 and PHIL 300 should be taken at the earliest time
 
-  - Blanket sub in place for any A3 for PHIL 126. Make sure specified GE is also fulfilled with alternative A3, email Ruby if not.
+  - Blanket substitution is in place for any A3 for PHIL 126. Make sure the specified GE is also fulfilled with the alternative A3; use the current transfer-credit review route if not.
 
   - Students need to take an additional PHIL course to sub for PHIL 101
 
 - [**Minors**](https://philosophy.calpoly.edu/current-students#Minor-Advising)
 
-  - Philosophy –David Zoller
+  - Philosophy - use the current department minor-advising route.
 
-  - Religious Studies –Anya Foxen and Stephen Lloyd-Moffett (on leave this fall). Devin Kuhn and Ken for the fall
+  - Religious Studies - use the current department advising route; faculty availability changes by term.
 
-  - Western Intellectual Tradition –Eleanor Helms. Minor will no longer be available starting in Fall 26. Can’t be declared after this date.
+  - Western Intellectual Tradition - use the current minor-advising route. The minor will no longer be available starting in Fall 2026 and cannot be declared after that date.
 
 - Miscellaneous
 
@@ -178,9 +182,9 @@ Department has 2 scholarships! <https://philosophy.calpoly.edu/philosophy-schola
 
     - CLA advising will handle AP
 
-    - We will refer to Ken if we feel students need more department support
+    - Refer to the department's transfer-credit or major-advising route when students need more department support.
 
-    - Katie sends list of AP/DQ to Ken each quarter
+    - The designated college advising route sends the AP/DQ list to the department's advising route each quarter.
 
 **Block Schedules**
 
@@ -208,9 +212,9 @@ Fall Transfer Reserves: Majors and GEs for all
 
 - Departments should request reserves for new JR Transfer Students in the major and any for continuing students as needed.
 
-- As of 2023, Kate will request any GE reserves based on need/enrollment numbers
+- As of 2023, the designated college coordinator requests GE reserves based on need and enrollment numbers.
 
-Administrative Coordinator: Rebekah Swigger
+Administrative coordination: use the current department administrative route.
 
 - **<u>Catalog Changes</u>**
 

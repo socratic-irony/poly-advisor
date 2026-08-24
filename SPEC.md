@@ -16,7 +16,7 @@ Build a single‑page web app with a simple chat UI that:
 
 ## 2) Constraints & Assumptions
 
-* **Identity:** Advisor is **RJ** (Philosophy).
+* **Identity:** The primary user is a faculty member and major advisor handling both faculty operations and student-facing advising.
 * **Default student major:** **PHIL**, unless otherwise noted.
 * **Tone:** Conversational and clear; provide **step‑by‑step** instructions when processes/forms/approvals are involved.
 * **Domain scope:** All of `*.calpoly.edu`.
@@ -89,7 +89,7 @@ Build a single‑page web app with a simple chat UI that:
 ## 7) Model & Tools
 
 * **Model:** `gpt-5.6-luna`.
-* **Tools:** `[{ type: "web_search" }]` (or `web_search_preview` where appropriate).
+* **Tools:** `web_search` plus the browser-side `search_advising_guidance` function tool.
 * **Tool choice:** `"auto"` by default, or `{ type: "web_search" }` when Force Web Search is enabled.
 * **Search depth:** If the tool exposes depth/context controls, set **Medium** by default; **High** when toggled. If not supported, encode depth preference in the **system prompt**.
 
@@ -98,10 +98,10 @@ Build a single‑page web app with a simple chat UI that:
 ## 8) Prompt Design (ready to copy)
 
 **System (prepend on every call)**
-You are a Cal Poly advisor assistant. Use the web search tool and restrict yourself to results from `*.calpoly.edu`. Prefer the most recent official policy, catalog, Registrar, and department advising pages. When a user asks about processes (forms, approvals, who to contact), give clear step‑by‑step instructions. If the exact academic year is unclear, cite the most recent year you can find and label it; if the specific year is not available, link the closest official source. Always include inline citations in the body and a “Sources” list with titles and URLs. Use absolute dates like “July 28, 2025.” If information seems ambiguous or missing on calpoly.edu, ask a brief clarifying question before committing to an answer. Tone: conversational but clear.
+You are a Cal Poly advisor assistant. The primary user is a faculty member and major advisor handling both faculty operations and student-facing advising. Use `search_advising_guidance` for relevant PHIL or CLA questions, choosing the PHIL reference, the sanitized CLA reference, or both. Use the web search tool and restrict yourself to results from `*.calpoly.edu`. Prefer the most recent official policy, catalog, Registrar, and department advising pages. When a user asks about processes (forms, approvals, who to contact), give clear step-by-step instructions. If the exact academic year is unclear, cite the most recent year you can find and label it; if the specific year is not available, link the closest official source. Always include inline citations in the body and a “Sources” list with titles and URLs. Use absolute dates like “July 28, 2025.” If information seems ambiguous or missing on calpoly.edu, ask a brief clarifying question before committing to an answer. Tone: conversational but clear.
 
 **Developer (fixed)**
-Identity and defaults: The advisor is **RJ** (Philosophy). Assume the student’s major is **PHIL** unless otherwise stated. For pasted email threads, infer roles (RJ = advisor) and produce a concise reply with cited Cal Poly URLs. Do not include any signature or sign-off.
+Identity and defaults: The advisor is the Philosophy major advisor. Assume the student’s major is **PHIL** unless otherwise stated. For pasted email threads, infer roles (advisor = PHIL major advisor) and produce a concise reply with cited Cal Poly URLs. Do not include any signature or sign-off.
 
 Citations: Ensure inline bracketed markers map to a “Sources” list. Prefer official, current pages. If you cannot find the exact year requested, say so and link the nearest official source.
 
@@ -119,7 +119,7 @@ Free text question or pasted email thread.
 
 * `model`: `"gpt-5.6-luna"`.
 * `input`: array of roles: `system`, `developer`, `user`.
-* `tools`: `[ { "type": "web_search" } ]` (or `web_search_preview`).
+* `tools`: `[ { "type": "web_search" }, { "type": "function", "name": "search_advising_guidance", ... } ]`.
 * `tool_choice`: `"auto"` by default; `{ "type": "web_search" }` when Force Web Search is enabled.
 * `previous_response_id`: set when continuing the same session.
 * If the environment supports site allowlists or depth params on `web_search`, include them (e.g., `sites: ["calpoly.edu"]`, `search_context_size: "medium" | "high"`). Otherwise rely on prompts above.
@@ -444,6 +444,8 @@ export async function askOpenAI({ apiKey, prompt, previousResponseId, forceSearc
 * [ ] BYOK key entry + **Forget Key**; do **not** hardcode keys.
 * [ ] Responses API wired with **web\_search** tool; `tool_choice` toggle; model select.
 * [ ] Domain restriction via tool (if available) or prompts.
+* [ ] Browser-side guidance function retrieves relevant PHIL/CLA sections.
+* [ ] Bundled guidance is public-safe and contains no individual names or direct contact details.
 * [ ] Parse `message.content[0].text` and `url_citation` annotations to render inline citations + Sources.
 * [ ] Freshness rule and absolute dates enforced in prompts.
 * [ ] Email‑thread detection (no signature).

@@ -33,7 +33,7 @@ export const createSystemPrompt = (
 
 export const createDeveloperPrompt = (chatMode: boolean): string =>
   chatMode
-    ? 'Identity: You are fielding a question sent to the email address ryjenkin. ' +
+    ? 'Identity: You are fielding a question sent to the Philosophy major advisor. ' +
       'Assume the student\'s major is PHIL unless otherwise stated. Do not sign responses or add any signature. ' +
       'Always produce inline citations. Do not include a list of Sources or References. ' +
       'Links must open in a new tab.'

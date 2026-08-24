@@ -11,6 +11,7 @@ A client-only Single Page Application (SPA) that provides an AI-powered advisor 
 - **Smart Citations**: Provides inline citations and clickable sources
 - **Email Thread Support**: Detects email threads and generates advisor responses
 - **Configurable Search**: Choose between medium and high-depth web searches
+- **Model-selected guidance retrieval**: The model can request relevant sections from bundled PHIL and CLA references without loading entire documents into every prompt
 - **Progressive Responses**: Reveals completed responses progressively for a smoother reading experience
 - **Mobile-Friendly**: Responsive design optimized for all devices
 - **No Backend Required**: Runs entirely in the browser, perfect for GitHub Pages
@@ -111,7 +112,9 @@ This app is configured for GitHub Pages deployment. Push to the main branch to t
 
 ## Advising-document status
 
-The bundled Philosophy advising reference is imported from the latest **PHIL.docx** supplied for this app and loaded at runtime from `public/PHIL_Advising_doc.md` (the browser-readable conversion). The app is still configured to search official Cal Poly pages for current information.
+The app hosts two browser-readable Markdown references in `public/`: the PHIL advising reference and a sanitized Fall 2026 CLA faculty-guidance reference. The Responses API can choose the `search_advising_guidance` function; the browser fetches only the requested static file and returns relevant sections. The primary user is a Cal Poly faculty member and major advisor handling both faculty operations and student-facing advising.
+
+The bundled references are public-safe role-based guidance. They intentionally omit individual faculty, staff, advisor, and coordinator names, personal or role-specific email addresses, direct phone numbers, room numbers, and signatures. Current deadlines, contacts, forms, and policies must still be verified on official Cal Poly pages.
 
 ## Architecture
 
@@ -125,3 +128,5 @@ Built with:
 ## Privacy
 
 Poly Advisor does not store your API key or conversations on its own server. Request content is sent directly to the OpenAI API as described above.
+
+Because this is a GitHub Pages application, files under `public/` are publicly downloadable. Do not add private student records, private correspondence, personal contact details, or other non-public information to the bundled guidance references.
