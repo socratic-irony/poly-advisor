@@ -11,11 +11,16 @@ import { cleanMarkdown } from '../utils/markdown';
 import { extractResponseText, extractUniqueSources, filterUrlCitations } from '../utils/responseParser';
 import { estimateCostUsd } from '../utils/cost';
 
-const readUsageTokens = (response: unknown): { input: number; output: number } => {
+const readUsageTokens = (response: unknown): { input: number; cached: number; output: number } => {
   const usage = (response as any)?.usage;
-  if (!usage || typeof usage !== 'object') return { input: 0, output: 0 };
+  if (!usage || typeof usage !== 'object') return { input: 0, cached: 0, output: 0 };
+  const details = usage.input_tokens_details;
   return {
     input: typeof usage.input_tokens === 'number' ? usage.input_tokens : 0,
+    cached:
+      details && typeof details === 'object' && typeof details.cached_tokens === 'number'
+        ? details.cached_tokens
+        : 0,
     output: typeof usage.output_tokens === 'number' ? usage.output_tokens : 0,
   };
 };
@@ -247,10 +252,12 @@ export function useChat(
 
     const startedAt = Date.now();
     let usageInputTokens = 0;
+    let usageCachedTokens = 0;
     let usageOutputTokens = 0;
     const accumulateUsage = (response: unknown) => {
       const usage = readUsageTokens(response);
       usageInputTokens += usage.input;
+      usageCachedTokens += usage.cached;
       usageOutputTokens += usage.output;
     };
 
@@ -364,7 +371,14 @@ export function useChat(
               toolsUsed,
               elapsedMs: Date.now() - startedAt,
               ...(usageInputTokens + usageOutputTokens > 0
-                ? { costUsd: estimateCostUsd(usageInputTokens, usageOutputTokens, model) }
+                ? {
+                    costUsd: estimateCostUsd(
+                      usageInputTokens,
+                      usageOutputTokens,
+                      model,
+                      usageCachedTokens
+                    ),
+                  }
                 : {}),
               ...(suggestions.length > 0 ? { suggestions } : {}),
             }

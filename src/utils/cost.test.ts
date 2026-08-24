@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  estimateCostFromUsage,
   estimateCostUsd,
   formatCostLabel,
   formatElapsedLabel,
@@ -11,12 +12,40 @@ describe('estimateCostUsd', () => {
     expect(estimateCostUsd(80_000, 10_000, 'gpt-5.6-luna')).toBeCloseTo(0.2, 6);
   });
 
+  it('bills cached input tokens at the discounted cached rate', () => {
+    expect(estimateCostUsd(80_000, 10_000, 'gpt-5.6-luna', 40_000)).toBeCloseTo(0.155, 6);
+  });
+
   it('falls back to default pricing for unknown models', () => {
     expect(estimateCostUsd(80_000, 10_000, 'mystery-model')).toBeCloseTo(0.2, 6);
   });
 
   it('returns zero when no tokens were used', () => {
     expect(estimateCostUsd(0, 0)).toBe(0);
+  });
+});
+
+describe('estimateCostFromUsage', () => {
+  it('prices a real Responses API usage object including cached tokens', () => {
+    const usage = {
+      input_tokens: 80_000,
+      input_tokens_details: { cached_tokens: 40_000 },
+      output_tokens: 10_000,
+      output_tokens_details: { reasoning_tokens: 2_000 },
+      total_tokens: 90_000,
+    };
+    expect(estimateCostFromUsage(usage, 'gpt-5.6-luna')).toBeCloseTo(0.155, 6);
+  });
+
+  it('treats missing token details as zero cached tokens', () => {
+    const usage = { input_tokens: 80_000, output_tokens: 10_000 };
+    expect(estimateCostFromUsage(usage, 'gpt-5.6-luna')).toBeCloseTo(0.2, 6);
+  });
+
+  it('returns zero for missing or malformed usage objects', () => {
+    expect(estimateCostFromUsage(undefined)).toBe(0);
+    expect(estimateCostFromUsage('nope')).toBe(0);
+    expect(estimateCostFromUsage({})).toBe(0);
   });
 });
 

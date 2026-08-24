@@ -81,7 +81,7 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
           {message.role === 'assistant' ? 'Poly Advisor' : message.role === 'user' ? 'You' : 'System'}
         </span>
       </div>
-      <div className="ml-[34px] sm:ml-[38px] whitespace-pre-wrap text-cal-poly-gray-dark leading-relaxed text-[15px]">
+      <div className="ml-[34px] sm:ml-[38px] text-cal-poly-gray-dark leading-relaxed text-[15px]">
         {message.attachment ? (
           <div className="mb-3 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
@@ -155,13 +155,13 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
       )}
 
       {message.role === 'assistant' && !isStreaming && message.toolsUsed && message.toolsUsed.length > 0 && (
-        <div className="ml-[34px] sm:ml-[38px] mt-3 flex flex-wrap items-center gap-1.5 text-xs text-cal-poly-gray">
-          <div className="flex items-center gap-1 font-medium">
+        <div className="ml-[34px] sm:ml-[38px] mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-gray-500">
+          <div className="flex items-center gap-1.5">
             <Wrench className="w-3.5 h-3.5" />
             <span>Tools used</span>
           </div>
           {message.toolsUsed.map((tool) => (
-            <span key={tool} className="rounded-full border border-gray-200 bg-white/70 px-2.5 py-0.5 font-medium">
+            <span key={tool}>
               {{
                 web_search: 'Web search',
                 phil_guidance: 'PHIL guidance',
@@ -169,6 +169,12 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
               }[tool]}
             </span>
           ))}
+        </div>
+      )}
+
+      {showQueryStats && (
+        <div className="ml-[34px] sm:ml-[38px] mt-1.5 text-xs font-medium text-gray-500 select-none tabular-nums">
+          {formatQueryStats(message.elapsedMs, message.costUsd)}
         </div>
       )}
 
@@ -198,33 +204,19 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
       )}
 
       {message.suggestions && message.suggestions.length > 0 && (
-        <div className="ml-[34px] sm:ml-[38px] mt-4 sm:mt-5 flex flex-wrap gap-2.5">
-          {message.suggestions.map((suggestion: string, idx: number) => {
-            const colorClasses = [
-              'bg-white text-green-800 border-green-200 hover:bg-green-50',
-              'bg-white text-amber-800 border-amber-200 hover:bg-amber-50',
-              'bg-white text-blue-800 border-blue-200 hover:bg-blue-50',
-            ];
-            const classes = colorClasses[idx % colorClasses.length];
-            return (
-              <button
-                key={idx}
-                onClick={() => onSuggestionClick?.(suggestion)}
-                className={`px-3.5 py-1.5 rounded-full border text-sm ${classes} transition-colors flex items-center gap-2 group`}
-              >
-                <span className="font-semibold">
-                  <FormattedMarkdown content={suggestion} inline />
-                </span>
-                <span className="text-xs opacity-60 group-hover:opacity-90">Ask →</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {showQueryStats && (
-        <div className="ml-[34px] sm:ml-[38px] mt-2.5 text-[11px] tracking-wide text-gray-400 select-none">
-          {formatQueryStats(message.elapsedMs, message.costUsd)}
+        <div className="ml-[34px] sm:ml-[38px] mt-3 sm:mt-4 flex flex-wrap gap-2">
+          {message.suggestions.map((suggestion: string, idx: number) => (
+            <button
+              key={idx}
+              onClick={() => onSuggestionClick?.(suggestion)}
+              className="w-full sm:w-auto px-3.5 py-2 rounded-lg border border-amber-200 bg-amber-50 text-left text-amber-900 hover:bg-amber-100 transition-colors flex items-center gap-2 group text-sm"
+            >
+              <span className="font-semibold">
+                <FormattedMarkdown content={suggestion} inline />
+              </span>
+              <span className="ml-auto text-xs text-amber-700 group-hover:text-amber-900 whitespace-nowrap">Ask →</span>
+            </button>
+          ))}
         </div>
       )}
     </div>

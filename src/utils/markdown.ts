@@ -16,5 +16,5 @@ export const cleanMarkdown = (text: string): string =>
     .replace(/>\s+/g, '> ')
     .replace(/`\s+/g, '`')
     .replace(/\s+`/g, '`')
-    .replace(/(\n[^\n#*\-+>\d`\s|])/g, '\n$1')
+    .replace(/((?<!\n)\n)([^\n#*\-+>\d`\s|])/g, '\n\n$2')
     .trim();

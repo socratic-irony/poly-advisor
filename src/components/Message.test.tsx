@@ -207,6 +207,58 @@ describe('Message', () => {
     expect(stats).toBeInTheDocument();
   });
 
+  it('renders the query stats immediately under the tools used line', () => {
+    const timedMessage: MessageType = {
+      ...message,
+      elapsedMs: 23_000,
+      costUsd: 0.002,
+      toolsUsed: ['web_search'],
+    };
+    render(<Message {...defaultProps} message={timedMessage} />);
+
+    const stats = screen.getByText('23 seconds • 0.2¢');
+    expect(stats.previousElementSibling).toHaveTextContent('Tools used');
+  });
+
+  it('styles the query stats to match the tools used line', () => {
+    const timedMessage: MessageType = { ...message, sources: undefined, elapsedMs: 23_000, costUsd: 0.002 };
+    render(<Message {...defaultProps} message={timedMessage} />);
+
+    const stats = screen.getByText('23 seconds • 0.2¢');
+    expect(stats).toHaveClass('text-xs', 'font-medium', 'text-gray-500');
+  });
+
+  it('styles the tools used line like the quiet action buttons', () => {
+    const messageWithTools: MessageType = { ...message, sources: undefined, toolsUsed: ['web_search', 'cla_guidance'] };
+    const { container } = render(<Message {...defaultProps} message={messageWithTools} />);
+
+    const toolsLine = screen.getByText('Tools used').closest('div')?.parentElement as HTMLElement;
+    expect(toolsLine).toHaveClass('text-gray-500');
+    const webSearchPill = screen.getByText('Web search');
+    expect(webSearchPill).not.toHaveClass('rounded-full');
+    expect(webSearchPill.className).not.toContain('bg-white');
+    expect(container).toBeDefined();
+  });
+
+  it('does not preserve raw newlines in the answer body (avoids doubled paragraph gaps)', () => {
+    const { container } = render(<Message {...defaultProps} />);
+    const body = container.querySelector('.whitespace-pre-wrap');
+    expect(body).toBeNull();
+  });
+
+  it('renders suggestions as uniform left-aligned boxes matching the sources styling', () => {
+    const messageWithSuggestions = { ...message, sources: undefined, suggestions: ['Follow-up one', 'Follow-up two'] };
+    render(<Message {...defaultProps} message={messageWithSuggestions} />);
+
+    const buttons = screen.getAllByRole('button', { name: /Follow-up/ });
+    expect(buttons).toHaveLength(2);
+    for (const button of buttons) {
+      expect(button).toHaveClass('rounded-lg', 'text-left', 'border-amber-200', 'bg-amber-50');
+      expect(button).not.toHaveClass('rounded-full');
+    }
+    expect(buttons[0].className).toBe(buttons[1].className);
+  });
+
   it('renders only the elapsed time when cost is unavailable', () => {
     const timedOnlyMessage: MessageType = { ...message, sources: undefined, elapsedMs: 9_400 };
     render(<Message {...defaultProps} message={timedOnlyMessage} />);

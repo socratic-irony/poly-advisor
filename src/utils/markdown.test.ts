@@ -7,4 +7,10 @@ describe('cleanMarkdown', () => {
 
     expect(cleanMarkdown(table)).toBe(table);
   });
+
+  it('collapses runs of blank lines down to a single paragraph break', () => {
+    expect(cleanMarkdown('First paragraph.\n\n\n\nSecond paragraph.')).toBe(
+      'First paragraph.\n\nSecond paragraph.'
+    );
+  });
 });
