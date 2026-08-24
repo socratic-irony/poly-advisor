@@ -265,6 +265,41 @@ describe('useChat', () => {
     expect(assistantMessage?.costUsd).toBeCloseTo(0.155, 6);
   });
 
+  it('gives web-search-backed answers enough time before timing out', async () => {
+    mockResponsesCreate.mockReset();
+    mockResponsesCreate.mockResolvedValue(defaultResponse);
+
+    const { result } = renderHook(() => useChat('gpt-5.6-luna', 'high', true));
+
+    await act(async () => {
+      await result.current.ask('What is the add/drop deadline?');
+    });
+
+    const [requestBody, requestOptions] = mockResponsesCreate.mock.calls[0];
+    expect(requestBody.tool_choice).toEqual({ type: 'web_search' });
+    expect(requestOptions.timeout).toBeGreaterThanOrEqual(120_000);
+  });
+
+  it('still completes when requestAnimationFrame never fires (throttled or background tab)', async () => {
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => {
+      return 0;
+    });
+
+    try {
+      const { result } = renderHook(() => useChat('gpt-5.6-luna', 'medium', false));
+
+      await act(async () => {
+        await result.current.ask('What is the add/drop deadline?');
+      });
+
+      expect(result.current.messages.find((message) => message.role === 'assistant')?.content)
+        .toBe('Mock response');
+      expect(result.current.isLoading).toBe(false);
+    } finally {
+      rafSpy.mockRestore();
+    }
+  });
+
   it('should reset conversation context when newChat is called', async () => {
     const { result } = renderHook(() => useChat('gpt-5.6-luna', 'medium', false));
 

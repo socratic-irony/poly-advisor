@@ -17,5 +17,7 @@ export function getChatErrorMessage(error: unknown): string {
     return 'Could not reach OpenAI. Check your internet connection, then try again.';
   }
 
-  return 'Something went wrong while preparing that response. Please try again.';
+  const detail = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+  const hint = detail ? ` (${detail})` : '';
+  return `Something went wrong while preparing that response. Please try again.${hint}`;
 }

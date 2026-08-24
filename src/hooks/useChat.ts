@@ -31,15 +31,21 @@ const isEmailThread = (text: string): boolean => {
 
 const nextFrame = () =>
   new Promise<void>((resolve) => {
+    let settled = false;
+    const settle = () => {
+      if (!settled) {
+        settled = true;
+        resolve();
+      }
+    };
     if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
-      window.requestAnimationFrame(() => resolve());
-    } else {
-      setTimeout(() => resolve(), 0);
+      window.requestAnimationFrame(settle);
     }
+    setTimeout(settle, 250);
   });
 
 const MAX_GUIDANCE_TOOL_TURNS = 3;
-const RESPONSE_TIMEOUT_MS = 45_000;
+const RESPONSE_TIMEOUT_MS = 120_000;
 
 const guidanceDocumentFromArguments = (argumentsJson: unknown): 'phil' | 'cla' | 'both' | null => {
   try {
