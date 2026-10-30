@@ -1,8 +1,10 @@
 // OpenAI web search can emit private-use citation markers inline,
-// e.g. citeturn0search0 (several ids may share one marker).
-const MARKER_SOURCE = '[^]*';
-const STRAY = /[-]/g;
-const SEP = '';
+// e.g. \ue200cite\ue202turn0search0\ue201 (several ids may share one marker).
+const MARKER_SOURCE = '\ue200[^\ue201]*\ue201';
+const STRAY = /[\ue200-\ue206]/g;
+const SEP = '\ue202';
+// A parenthetical holding exactly one markdown link, e.g. " ([cla.calpoly.edu](https://cla.calpoly.edu/x))".
+const PAREN_LINK = / ?\(\[[^\]]*\]\((https?:\/\/[^)\s]+)\)\)/g;
 
 type CitationAnnotation = { url: string; start: number; end: number };
 
@@ -45,7 +47,7 @@ export const resolveCitationMarkers = (text: string, annotations: unknown[]): st
     result += text.slice(cursor, marker.start);
     result +=
       marker.urls.length > 0
-        ? `cite${SEP}${marker.urls.map(encodeURIComponent).join(SEP)}`
+        ? `\ue200cite${SEP}${marker.urls.map(encodeURIComponent).join(SEP)}\ue201`
         : text.slice(marker.start, marker.end);
     cursor = marker.end;
   }
@@ -54,12 +56,27 @@ export const resolveCitationMarkers = (text: string, annotations: unknown[]): st
 
 export const stripCitationMarkers = (text: string): string =>
   // Also swallow the spaces before a marker so removal never leaves a double space or a space before punctuation.
-  text.replace(new RegExp(`[ \\t]*${MARKER_SOURCE}`, 'g'), '').replace(STRAY, '');
-
-// Swaps each marker for <citemark> tags: one per resolved source, numbered by its position in `sources`
-// (matching the Sources list); markers that could not be resolved become an unlinked "•" badge.
-export const markCitations = (text: string, sources: { url: string }[] = []): string =>
   text
+    .replace(PAREN_LINK, '')
+    .replace(new RegExp(`[ \\t]*${MARKER_SOURCE}`, 'g'), '')
+    .replace(STRAY, '');
+
+// Swaps each marker and each "([label](url))" parenthetical for <citemark> tags, numbered by the
+// source's position in `sources` (matching the Sources list). Links not in `sources` are numbered
+// after the listed ones; markers that could not be resolved become an unlinked "•" badge.
+export const markCitations = (text: string, sources: { url: string }[] = []): string => {
+  const extras = new Map<string, number>();
+  const numberFor = (url: string): number => {
+    const position = sources.findIndex((source) => source.url === url);
+    if (position >= 0) return position + 1;
+    if (!extras.has(url)) extras.set(url, sources.length + extras.size + 1);
+    return extras.get(url) as number;
+  };
+  const tag = (url: string): string =>
+    `<citemark n="${numberFor(url)}" u="${encodeURIComponent(url)}"></citemark>`;
+
+  return text
+    .replace(PAREN_LINK, (_match, url: string) => tag(url))
     .replace(new RegExp(MARKER_SOURCE, 'g'), (marker) => {
       const urls = marker
         .slice(1, -1)
@@ -73,12 +90,7 @@ export const markCitations = (text: string, sources: { url: string }[] = []): st
           }
         })
         .filter((part) => /^https?:\/\//.test(part));
-      const tags = urls.flatMap((url) => {
-        const position = sources.findIndex((source) => source.url === url);
-        return position >= 0
-          ? [`<citemark n="${position + 1}" u="${encodeURIComponent(url)}"></citemark>`]
-          : [];
-      });
-      return tags.length > 0 ? tags.join('') : '<citemark n="•"></citemark>';
+      return urls.length > 0 ? urls.map(tag).join('') : '<citemark n="•"></citemark>';
     })
     .replace(STRAY, '');
+};

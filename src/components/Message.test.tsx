@@ -290,7 +290,7 @@ describe('citation markers', () => {
   it('renders markers as non-text badges so they are not copied', () => {
     const { container } = render(
       <Message
-        message={{ role: 'assistant', content: 'See the form.citeturn0search0' }}
+        message={{ role: 'assistant', content: 'See the form.\ue200cite\ue202turn0search0\ue201' }}
         index={0}
         isStreaming={false}
         copiedMessageIndex={null}
@@ -302,7 +302,29 @@ describe('citation markers', () => {
     const badge = container.querySelector('sup[data-n="[•]"]');
     expect(badge).not.toBeNull();
     expect(badge?.textContent).toBe('');
-    expect(container.textContent).not.toMatch(/[-]|turn0search0/);
+    expect(container.textContent).not.toMatch(/[\ue200-\ue206]|turn0search0/);
+  });
+
+  it('renders a parenthetical source link as a chip and not as text', () => {
+    const { container } = render(
+      <Message
+        message={{
+          role: 'assistant',
+          content: 'Meet with the chair. ([philosophy.calpoly.edu](https://philosophy.calpoly.edu/b)) Then submit.',
+          sources: [{ title: 'A', url: 'https://cla.calpoly.edu/a' }, { title: 'B', url: 'https://philosophy.calpoly.edu/b' }],
+        }}
+        index={0}
+        isStreaming={false}
+        copiedMessageIndex={null}
+        onCopy={vi.fn()}
+        onRegenerate={vi.fn()}
+        onExport={vi.fn()}
+      />
+    );
+    const chip = container.querySelector('a[data-n="[2]"]');
+    expect(chip?.getAttribute('href')).toBe('https://philosophy.calpoly.edu/b');
+    expect(container.textContent).toContain('Meet with the chair. Then submit.');
+    expect(container.textContent).not.toContain('philosophy.calpoly.edu/b)');
   });
 
   it('keeps text after a mid-sentence marker and links resolved markers to the source', () => {
