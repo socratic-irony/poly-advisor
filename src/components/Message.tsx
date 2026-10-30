@@ -3,6 +3,7 @@ import { Copy, Check, RotateCw, Download, Mail, Wrench } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
 import { Message as MessageType } from '../types';
 import { formatQueryStats } from '../utils/cost';
+import { markCitations, stripCitationMarkers } from '../utils/citations';
 
 interface MessageProps {
   message: MessageType;
@@ -16,11 +17,28 @@ interface MessageProps {
   onSuggestionClick?: (suggestion: string) => void;
 }
 
-function FormattedMarkdown({ content, inline = false }: { content: string; inline?: boolean }) {
+function FormattedMarkdown({ content, inline = false, sources }: { content: string; inline?: boolean; sources?: { url: string }[] }) {
   return (
     <Markdown
       options={{
         overrides: {
+          // The number lives in a ::before pseudo-element so it is never selected or copied.
+          citemark: ({ n, u }: { n?: string; u?: string }) => {
+            const className =
+              "select-none ml-0.5 align-super text-[10px] font-medium text-cal-poly-primary before:content-[attr(data-n)]";
+            return u ? (
+              <a
+                href={decodeURIComponent(u)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Source ${n}`}
+                data-n={`[${n}]`}
+                className={`${className} hover:underline`}
+              />
+            ) : (
+              <sup aria-hidden="true" data-n={`[${n}]`} className={className} />
+            );
+          },
           a: ({ ...props }) => (
             <a {...props} target="_blank" rel="noopener noreferrer" className="text-cal-poly-primary hover:text-cal-poly-green-light underline break-words" />
           ),
@@ -47,7 +65,7 @@ function FormattedMarkdown({ content, inline = false }: { content: string; inlin
         },
       }}
     >
-      {content}
+      {markCitations(content, sources)}
     </Markdown>
   );
 }
@@ -102,7 +120,7 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
             )}
           </div>
         ) : (
-            <FormattedMarkdown content={message.content} />
+            <FormattedMarkdown content={message.content} sources={message.sources} />
         )}
       </div>
 
@@ -119,7 +137,7 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
           ) : (
             <>
               <button
-                onClick={() => onCopy(index, message.content)}
+                onClick={() => onCopy(index, stripCitationMarkers(message.content))}
                 className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-500 hover:text-cal-poly-primary hover:bg-green-50 rounded-md transition-colors"
               >
                 {copiedMessageIndex === index ? (
@@ -143,7 +161,7 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
                 <span className="hidden sm:inline">Regenerate</span>
               </button>
               <button
-                onClick={() => onExport(message.content)}
+                onClick={() => onExport(stripCitationMarkers(message.content))}
                 className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-500 hover:text-cal-poly-primary hover:bg-green-50 rounded-md transition-colors"
               >
                 <Download className="w-3.5 h-3.5" />

@@ -1,4 +1,5 @@
 import { Message } from '../types';
+import { resolveCitationMarkers } from './citations';
 
 type ResponseRecord = Record<string, unknown>;
 
@@ -48,7 +49,10 @@ const collectTextAndAnnotations = (content: unknown): { text: string; annotation
     }
 
     if (typeof record.text === 'string') {
-      const trimmed = record.text.trim();
+      const resolved = Array.isArray(record.annotations)
+        ? resolveCitationMarkers(record.text, record.annotations)
+        : record.text;
+      const trimmed = resolved.trim();
       if (trimmed) {
         texts.push(trimmed);
       }

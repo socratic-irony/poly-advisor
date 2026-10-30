@@ -5,16 +5,20 @@ type TokenPricing = {
 };
 
 const MODEL_PRICING: Record<string, TokenPricing> = {
-  'gpt-5.6-luna': { inputPerMillion: 1.25, cachedInputPerMillion: 0.125, outputPerMillion: 10 },
+  'gpt-5.6-luna': { inputPerMillion: 0.2, cachedInputPerMillion: 0.02, outputPerMillion: 1.2 },
 };
 
-const FALLBACK_PRICING: TokenPricing = { inputPerMillion: 1.25, cachedInputPerMillion: 0.125, outputPerMillion: 10 };
+// Web search is billed per call on top of tokens (OpenAI pricing: $10 per 1k calls for reasoning models).
+export const WEB_SEARCH_USD_PER_CALL = 0.01;
+
+const FALLBACK_PRICING: TokenPricing = { inputPerMillion: 0.2, cachedInputPerMillion: 0.02, outputPerMillion: 1.2 };
 
 export const estimateCostUsd = (
   inputTokens: number,
   outputTokens: number,
   model?: string,
-  cachedInputTokens = 0
+  cachedInputTokens = 0,
+  webSearchCalls = 0
 ): number => {
   const pricing = (model && MODEL_PRICING[model]) || FALLBACK_PRICING;
   const cached = Math.min(Math.max(cachedInputTokens, 0), Math.max(inputTokens, 0));
@@ -22,7 +26,8 @@ export const estimateCostUsd = (
   return (
     (freshInput / 1_000_000) * pricing.inputPerMillion +
     (cached / 1_000_000) * pricing.cachedInputPerMillion +
-    (Math.max(outputTokens, 0) / 1_000_000) * pricing.outputPerMillion
+    (Math.max(outputTokens, 0) / 1_000_000) * pricing.outputPerMillion +
+    Math.max(webSearchCalls, 0) * WEB_SEARCH_USD_PER_CALL
   );
 };
 

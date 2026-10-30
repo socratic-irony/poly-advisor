@@ -285,3 +285,45 @@ describe('Message', () => {
     expect(screen.queryByText(/•/)).not.toBeInTheDocument();
   });
 });
+
+describe('citation markers', () => {
+  it('renders markers as non-text badges so they are not copied', () => {
+    const { container } = render(
+      <Message
+        message={{ role: 'assistant', content: 'See the form.citeturn0search0' }}
+        index={0}
+        isStreaming={false}
+        copiedMessageIndex={null}
+        onCopy={vi.fn()}
+        onRegenerate={vi.fn()}
+        onExport={vi.fn()}
+      />
+    );
+    const badge = container.querySelector('sup[data-n="[•]"]');
+    expect(badge).not.toBeNull();
+    expect(badge?.textContent).toBe('');
+    expect(container.textContent).not.toMatch(/[-]|turn0search0/);
+  });
+
+  it('keeps text after a mid-sentence marker and links resolved markers to the source', () => {
+    const marker = '\ue200cite\ue202' + encodeURIComponent('https://calpoly.edu/a') + '\ue201';
+    const { container } = render(
+      <Message
+        message={{
+          role: 'assistant',
+          content: `Submit the form${marker} before the deadline and keep a copy.`,
+          sources: [{ title: 'A', url: 'https://calpoly.edu/a' }],
+        }}
+        index={0}
+        isStreaming={false}
+        copiedMessageIndex={null}
+        onCopy={vi.fn()}
+        onRegenerate={vi.fn()}
+        onExport={vi.fn()}
+      />
+    );
+    const link = container.querySelector('a[data-n="[1]"]');
+    expect(link?.getAttribute('href')).toBe('https://calpoly.edu/a');
+    expect(container.textContent).toContain('Submit the form before the deadline and keep a copy.');
+  });
+});

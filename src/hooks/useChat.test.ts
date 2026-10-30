@@ -236,7 +236,7 @@ describe('useChat', () => {
 
     const assistantMessage = result.current.messages.find((message) => message.role === 'assistant');
     expect(assistantMessage?.elapsedMs).toBeGreaterThanOrEqual(0);
-    expect(assistantMessage?.costUsd).toBeCloseTo(0.2, 6);
+    expect(assistantMessage?.costUsd).toBeCloseTo(0.028, 6);
   });
 
   it('bills cached input tokens at the discounted rate when usage details are present', async () => {
@@ -262,7 +262,7 @@ describe('useChat', () => {
     });
 
     const assistantMessage = result.current.messages.find((message) => message.role === 'assistant');
-    expect(assistantMessage?.costUsd).toBeCloseTo(0.155, 6);
+    expect(assistantMessage?.costUsd).toBeCloseTo(0.0208, 6);
   });
 
   it('gives web-search-backed answers enough time before timing out', async () => {
@@ -277,6 +277,7 @@ describe('useChat', () => {
 
     const [requestBody, requestOptions] = mockResponsesCreate.mock.calls[0];
     expect(requestBody.tool_choice).toEqual({ type: 'web_search' });
+    expect(requestBody.tools.find((tool: any) => tool.type === 'web_search').search_context_size).toBe('high');
     expect(requestOptions.timeout).toBeGreaterThanOrEqual(120_000);
   });
 

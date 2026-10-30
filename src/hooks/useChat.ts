@@ -260,7 +260,12 @@ export function useChat(
     let usageInputTokens = 0;
     let usageCachedTokens = 0;
     let usageOutputTokens = 0;
+    let webSearchCalls = 0;
     const accumulateUsage = (response: unknown) => {
+      const items = (response as any)?.output;
+      if (Array.isArray(items)) {
+        webSearchCalls += items.filter((item: any) => item?.type === 'web_search_call').length;
+      }
       const usage = readUsageTokens(response);
       usageInputTokens += usage.input;
       usageCachedTokens += usage.cached;
@@ -268,7 +273,11 @@ export function useChat(
     };
 
     const client = createClient();
-    const webSearchTool = { type: "web_search", filters: { allowed_domains: ALLOWED_DOMAINS } } as any;
+    const webSearchTool = {
+      type: "web_search",
+      filters: { allowed_domains: ALLOWED_DOMAINS },
+      search_context_size: searchDepth,
+    } as any;
     const tools = [webSearchTool, guidanceSearchTool] as any;
     const toolChoice =
       forceSearch
@@ -382,7 +391,8 @@ export function useChat(
                       usageInputTokens,
                       usageOutputTokens,
                       model,
-                      usageCachedTokens
+                      usageCachedTokens,
+                      webSearchCalls
                     ),
                   }
                 : {}),
