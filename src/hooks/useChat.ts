@@ -365,7 +365,26 @@ export function useChat(
     setActiveToolStatus('thinking');
     await nextFrame();
 
-    const { text, annotations } = extractResponseText(response);
+    let extracted = extractResponseText(response);
+    if (!extracted.text.trim() && (response as any).status === 'incomplete') {
+      // The model was cut off mid-research (e.g. an undocumented limit like "max_messages"); ask it to wrap up with what it has.
+      console.warn('Incomplete model response, requesting a final answer', (response as any).incomplete_details);
+      response = await client.responses.create({
+        model,
+        input: [
+          { role: "system", content: systemContent },
+          { role: "developer", content: devContent },
+          { role: "user", content: [{ type: "input_text", text: "Write your final answer now using what you have already gathered. Do not call any more tools." }] },
+        ],
+        tools,
+        tool_choice: 'none' as any,
+        previous_response_id: response.id,
+      }, { timeout: RESPONSE_TIMEOUT_MS });
+      accumulateUsage(response);
+      setPreviousResponseId(response.id);
+      extracted = extractResponseText(response);
+    }
+    const { text, annotations } = extracted;
     if (!text.trim()) {
       console.error('Empty model response', response);
       throw new Error(describeEmptyResponse(response));

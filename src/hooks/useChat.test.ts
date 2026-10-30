@@ -500,6 +500,34 @@ describe('useChat', () => {
     expect(suggestionSystemPrompt).toContain('Do not use Markdown');
   });
 
+  it('asks for a final answer when the first response is incomplete with no text', async () => {
+    mockResponsesCreate.mockReset();
+    mockResponsesCreate
+      .mockResolvedValueOnce({
+        id: 'resp-incomplete',
+        status: 'incomplete',
+        incomplete_details: { reason: 'max_messages' },
+        output: [{ type: 'reasoning' }],
+      })
+      .mockResolvedValueOnce({
+        id: 'resp-final',
+        output: [{ type: 'message', content: [{ type: 'output_text', text: 'Here is the answer.' }] }],
+      })
+      .mockResolvedValueOnce({ id: 'resp-suggest', output: [{ type: 'output_text', text: 'Next?' }] });
+
+    const { result } = renderHook(() => useChat('gpt-5.6-luna', 'medium', false));
+
+    await act(async () => {
+      await result.current.ask('How do I add a double major?');
+    });
+
+    const retryBody = mockResponsesCreate.mock.calls[1][0];
+    expect(retryBody.tool_choice).toBe('none');
+    expect(retryBody.previous_response_id).toBe('resp-incomplete');
+    const assistantMessage = result.current.messages.find((m) => m.role === 'assistant');
+    expect(assistantMessage?.content).toBe('Here is the answer.');
+  });
+
   it('explains how to recover when an API key has not been saved', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     localStorageMock.getItem.mockReturnValue(null);
