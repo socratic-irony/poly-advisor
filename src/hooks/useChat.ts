@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import { Message, ToolStatus, ToolUsed } from '../types';
 import { parseEmlFile, readFileAsText } from '../utils/emlParser';
 import { stripHtml } from '../utils/stripHtml';
-import { getChatErrorMessage } from '../utils/chatError';
+import { describeEmptyResponse, getChatErrorMessage } from '../utils/chatError';
 import { ALLOWED_DOMAINS } from '../config/search';
 import { createDeveloperPrompt, createEmailThreadPrompt, createSystemPrompt } from '../utils/chatPrompts';
 import { executeGuidanceToolCall, guidanceSearchTool } from '../utils/guidanceTool';
@@ -354,7 +354,8 @@ export function useChat(
           ...functionOutputs,
         ],
         tools,
-        tool_choice: toolChoice as any,
+        // On the last allowed round, forbid more tool calls so the model has to write an answer.
+        tool_choice: (toolTurn === MAX_GUIDANCE_TOOL_TURNS - 1 ? 'none' : toolChoice) as any,
         previous_response_id: response.id,
       }, { timeout: RESPONSE_TIMEOUT_MS });
       accumulateUsage(response);
@@ -365,6 +366,10 @@ export function useChat(
     await nextFrame();
 
     const { text, annotations } = extractResponseText(response);
+    if (!text.trim()) {
+      console.error('Empty model response', response);
+      throw new Error(describeEmptyResponse(response));
+    }
     const sources = extractUniqueSources(
       filterUrlCitations(annotations)
     );

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getChatErrorMessage } from './chatError';
+import { getChatErrorMessage, describeEmptyResponse } from './chatError';
 
 describe('getChatErrorMessage', () => {
   it('maps missing API key errors', () => {
@@ -23,5 +23,27 @@ describe('getChatErrorMessage', () => {
   it('handles non-Error values gracefully', () => {
     expect(getChatErrorMessage('boom')).toContain('Something went wrong');
     expect(getChatErrorMessage(undefined)).toContain('Something went wrong');
+  });
+});
+
+describe('describeEmptyResponse', () => {
+  it('reports the output token limit with reasoning usage', () => {
+    const text = describeEmptyResponse({
+      status: 'incomplete',
+      incomplete_details: { reason: 'max_output_tokens' },
+      usage: { output_tokens: 4000, output_tokens_details: { reasoning_tokens: 4000 } },
+    });
+    expect(text).toContain('output token limit');
+    expect(text).toContain('4000 of them reasoning');
+  });
+
+  it('reports refusals, failures and pending tool calls', () => {
+    expect(describeEmptyResponse({ output: [{ content: [{ type: 'refusal', refusal: 'No.' }] }] })).toContain('declined');
+    expect(describeEmptyResponse({ status: 'failed', error: { message: 'boom' } })).toContain('boom');
+    expect(describeEmptyResponse({ output: [{ type: 'function_call' }] })).toContain('guidance lookups');
+  });
+
+  it('falls back to listing what came back', () => {
+    expect(describeEmptyResponse({ output: [{ type: 'reasoning' }] })).toContain('reasoning');
   });
 });
