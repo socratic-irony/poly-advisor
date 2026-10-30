@@ -76,11 +76,11 @@ describe('formatCostLabel', () => {
 
 describe('formatElapsedLabel', () => {
   it('reports whole seconds at or above ten seconds', () => {
-    expect(formatElapsedLabel(23_000)).toBe('23 seconds');
+    expect(formatElapsedLabel(23_000)).toBe('23 s');
   });
 
   it('reports fractional seconds below ten seconds', () => {
-    expect(formatElapsedLabel(9_400)).toBe('9.4 seconds');
+    expect(formatElapsedLabel(9_400)).toBe('9.4 s');
   });
 
   it('returns an empty string for invalid values', () => {
@@ -91,11 +91,11 @@ describe('formatElapsedLabel', () => {
 
 describe('formatQueryStats', () => {
   it('joins elapsed time and cost with a separator dot', () => {
-    expect(formatQueryStats(23_000, 0.002)).toBe('23 seconds • 0.2¢');
+    expect(formatQueryStats(23_000, 0.002)).toBe('23 s • 0.2¢');
   });
 
   it('renders only the parts that are available', () => {
-    expect(formatQueryStats(23_000, undefined)).toBe('23 seconds');
+    expect(formatQueryStats(23_000, undefined)).toBe('23 s');
     expect(formatQueryStats(undefined, 0.002)).toBe('0.2¢');
   });
 

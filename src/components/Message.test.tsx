@@ -38,7 +38,7 @@ describe('Message', () => {
 
     render(<Message {...defaultProps} message={messageWithTools} />);
 
-    expect(screen.getByText('Tools used')).toBeInTheDocument();
+    expect(screen.getByText('Tools used:')).toBeInTheDocument();
     expect(screen.getByText('Web search')).toBeInTheDocument();
     expect(screen.getByText('CLA guidance')).toBeInTheDocument();
   });
@@ -203,41 +203,48 @@ describe('Message', () => {
     };
     render(<Message {...defaultProps} message={timedMessage} />);
 
-    const stats = screen.getByText('23 seconds • 0.2¢');
+    const stats = screen.getByText('23 s • 0.2¢');
     expect(stats).toBeInTheDocument();
   });
 
-  it('renders the query stats immediately under the tools used line', () => {
+  it('puts the query stats on the same row as the tools, pushed to the right', () => {
     const timedMessage: MessageType = {
       ...message,
+      sources: undefined,
       elapsedMs: 23_000,
       costUsd: 0.002,
       toolsUsed: ['web_search'],
     };
     render(<Message {...defaultProps} message={timedMessage} />);
 
-    const stats = screen.getByText('23 seconds • 0.2¢');
-    expect(stats.previousElementSibling).toHaveTextContent('Tools used');
+    const stats = screen.getByText('23 s • 0.2¢');
+    const row = screen.getByText('Tools used:').closest('[data-testid="message-footer"]');
+    expect(row).not.toBeNull();
+    expect(row).toContainElement(stats);
+    expect(stats).toHaveClass('ml-auto', 'text-gray-500');
+    expect(row).toHaveClass('text-xs');
   });
 
-  it('styles the query stats to match the tools used line', () => {
-    const timedMessage: MessageType = { ...message, sources: undefined, elapsedMs: 23_000, costUsd: 0.002 };
-    render(<Message {...defaultProps} message={timedMessage} />);
+  it('renders each tool as a pill with an icon', () => {
+    const messageWithTools: MessageType = {
+      ...message,
+      sources: undefined,
+      toolsUsed: ['web_search', 'phil_guidance', 'cla_guidance'],
+    };
+    render(<Message {...defaultProps} message={messageWithTools} />);
 
-    const stats = screen.getByText('23 seconds • 0.2¢');
-    expect(stats).toHaveClass('text-xs', 'font-medium', 'text-gray-500');
+    for (const label of ['Web search', 'PHIL guidance', 'CLA guidance']) {
+      const pill = screen.getByText(label).closest('span[data-tool-pill]') as HTMLElement;
+      expect(pill).toHaveClass('rounded-full', 'border');
+      expect(pill.querySelector('svg')).not.toBeNull();
+    }
+    expect(screen.getByText('Web search').closest('span[data-tool-pill]')?.querySelector('svg')).toHaveClass('lucide-globe');
+    expect(screen.getByText('CLA guidance').closest('span[data-tool-pill]')?.querySelector('svg')).toHaveClass('lucide-file-text');
   });
 
-  it('styles the tools used line like the quiet action buttons', () => {
-    const messageWithTools: MessageType = { ...message, sources: undefined, toolsUsed: ['web_search', 'cla_guidance'] };
-    const { container } = render(<Message {...defaultProps} message={messageWithTools} />);
-
-    const toolsLine = screen.getByText('Tools used').closest('div')?.parentElement as HTMLElement;
-    expect(toolsLine).toHaveClass('text-gray-500');
-    const webSearchPill = screen.getByText('Web search');
-    expect(webSearchPill).not.toHaveClass('rounded-full');
-    expect(webSearchPill.className).not.toContain('bg-white');
-    expect(container).toBeDefined();
+  it('left-aligns the stats when no tools were used', () => {
+    render(<Message {...defaultProps} message={{ ...message, sources: undefined, elapsedMs: 23_000, costUsd: 0.002 }} />);
+    expect(screen.getByText('23 s • 0.2¢')).not.toHaveClass('ml-auto');
   });
 
   it('does not preserve raw newlines in the answer body (avoids doubled paragraph gaps)', () => {
@@ -263,13 +270,13 @@ describe('Message', () => {
     const timedOnlyMessage: MessageType = { ...message, sources: undefined, elapsedMs: 9_400 };
     render(<Message {...defaultProps} message={timedOnlyMessage} />);
 
-    expect(screen.getByText('9.4 seconds')).toBeInTheDocument();
+    expect(screen.getByText('9.4 s')).toBeInTheDocument();
     expect(screen.queryByText(/¢/)).not.toBeInTheDocument();
   });
 
   it('does not report query stats without timing data', () => {
     render(<Message {...defaultProps} />);
-    expect(screen.queryByText(/seconds/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/\d s$/)).not.toBeInTheDocument();
   });
 
   it('does not report query stats for user or error messages', () => {

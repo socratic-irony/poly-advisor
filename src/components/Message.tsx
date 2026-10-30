@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Check, RotateCw, Download, Mail, Wrench } from 'lucide-react';
+import { Copy, Check, RotateCw, Download, Mail, Wrench, Globe, FileText } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
 import { Message as MessageType } from '../types';
 import { formatQueryStats } from '../utils/cost';
@@ -78,6 +78,9 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
   const displayContent = shouldTruncate && !isExpanded
     ? words.slice(0, 200).join(' ') + '...'
     : message.content;
+
+  const hasTools =
+    message.role === 'assistant' && !isStreaming && Boolean(message.toolsUsed && message.toolsUsed.length > 0);
 
   const showQueryStats =
     message.role === 'assistant' && !isStreaming && !message.isError &&
@@ -172,27 +175,43 @@ export default function Message({ message, index, isStreaming, copiedMessageInde
         </div>
       )}
 
-      {message.role === 'assistant' && !isStreaming && message.toolsUsed && message.toolsUsed.length > 0 && (
-        <div className="ml-[34px] sm:ml-[38px] mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-gray-500">
-          <div className="flex items-center gap-1.5">
-            <Wrench className="w-3.5 h-3.5" />
-            <span>Tools used</span>
-          </div>
-          {message.toolsUsed.map((tool) => (
-            <span key={tool}>
-              {{
-                web_search: 'Web search',
-                phil_guidance: 'PHIL guidance',
-                cla_guidance: 'CLA guidance',
-              }[tool]}
+      {(hasTools || showQueryStats) && (
+        <div
+          data-testid="message-footer"
+          className="ml-[34px] sm:ml-[38px] mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs font-medium text-gray-500"
+        >
+          {hasTools && (
+            <>
+              <div className="flex items-center gap-1.5">
+                <Wrench className="w-3.5 h-3.5" />
+                <span>Tools used:</span>
+              </div>
+              {message.toolsUsed?.map((tool) => {
+                const Icon = tool === 'web_search' ? Globe : FileText;
+                return (
+                  <span
+                    key={tool}
+                    data-tool-pill
+                    className="inline-flex items-center gap-1 rounded-full border border-gray-300 bg-white py-0.5 pl-1.5 pr-2.5 text-gray-600"
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>
+                      {{
+                        web_search: 'Web search',
+                        phil_guidance: 'PHIL guidance',
+                        cla_guidance: 'CLA guidance',
+                      }[tool]}
+                    </span>
+                  </span>
+                );
+              })}
+            </>
+          )}
+          {showQueryStats && (
+            <span className={`${hasTools ? 'ml-auto ' : ''}select-none tabular-nums text-gray-500`}>
+              {formatQueryStats(message.elapsedMs, message.costUsd)}
             </span>
-          ))}
-        </div>
-      )}
-
-      {showQueryStats && (
-        <div className="ml-[34px] sm:ml-[38px] mt-1.5 text-xs font-medium text-gray-500 select-none tabular-nums">
-          {formatQueryStats(message.elapsedMs, message.costUsd)}
+          )}
         </div>
       )}
 

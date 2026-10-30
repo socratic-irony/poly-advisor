@@ -60,7 +60,7 @@ export const formatCostLabel = (costUsd: number): string => {
 export const formatElapsedLabel = (elapsedMs: number): string => {
   if (!Number.isFinite(elapsedMs) || elapsedMs < 0) return '';
   const seconds = elapsedMs / 1000;
-  return seconds >= 10 ? `${Math.round(seconds)} seconds` : `${seconds.toFixed(1)} seconds`;
+  return seconds >= 10 ? `${Math.round(seconds)} s` : `${seconds.toFixed(1)} s`;
 };
 
 export const formatQueryStats = (
